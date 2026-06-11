@@ -4,10 +4,16 @@ import { amountInWords, computeTotals, formatINR } from "@/lib/invoice";
 import { cn } from "@/lib/utils";
 import type { InvoiceFormData } from "@/types/invoice";
 
-// Exact visiting-card wave palette.
-const WAVE_NAVY = "#032B5A";
-const WAVE_ROYAL = "#0F5FB3";
-const WAVE_GOLD = "#D4A63A";
+// Print-safe visiting-card palette (rich, high-contrast for paper/PDF).
+const NAVY = "#032B5A";
+const ROYAL = "#004D99";
+const GOLD = "#B8860B";
+
+// Force colour-accurate printing (waves, table header, gold accents).
+const PRINT_EXACT = {
+  WebkitPrintColorAdjust: "exact",
+  printColorAdjust: "exact",
+} as React.CSSProperties;
 
 function formatDate(iso: string): string {
   if (!iso) return "—";
@@ -19,22 +25,22 @@ function formatDate(iso: string): string {
 /**
  * Triple curved corner wave (Dark Navy → Royal Blue → Gold), reproduced from
  * the Elangovan Associates visiting card. Rendered top-left; rotate 180° for the
- * bottom-right repeat. Colours are explicit hex so they survive PDF/print
- * (the .print-area enables print-color-adjust).
+ * bottom-right mirror. SVG (not clipped CSS borders) for perfect scaling, with
+ * explicit colours so they survive PDF/print.
  */
 function CornerWaves({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 200 200" className={className} aria-hidden="true" fill="none">
-      <path d="M152 6 C 84 11, 13 72, 6 152" stroke={WAVE_NAVY} strokeWidth="21" strokeLinecap="round" />
-      <path d="M120 6 C 66 10, 12 62, 6 120" stroke={WAVE_ROYAL} strokeWidth="15" strokeLinecap="round" />
-      <path d="M92 6 C 50 9, 9 50, 6 92" stroke={WAVE_GOLD} strokeWidth="9" strokeLinecap="round" />
+    <svg viewBox="0 0 200 200" className={className} aria-hidden="true" fill="none" style={PRINT_EXACT}>
+      <path d="M152 6 C 84 11, 13 72, 6 152" stroke={NAVY} strokeWidth="22" strokeLinecap="round" />
+      <path d="M120 6 C 66 10, 12 62, 6 120" stroke={ROYAL} strokeWidth="15" strokeLinecap="round" />
+      <path d="M92 6 C 50 9, 9 50, 6 92" stroke={GOLD} strokeWidth="9" strokeLinecap="round" />
     </svg>
   );
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">
+    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: GOLD }}>
       {children}
     </p>
   );
@@ -43,8 +49,10 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between gap-8 py-0.5 text-sm">
-      <span className="text-charcoal/55">{label}</span>
-      <span className="font-semibold text-navy">{value}</span>
+      <span className="text-charcoal/60">{label}</span>
+      <span className="font-semibold" style={{ color: NAVY }}>
+        {value}
+      </span>
     </div>
   );
 }
@@ -52,8 +60,10 @@ function MetaRow({ label, value }: { label: string; value: string }) {
 function TotalRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-6 py-1.5 text-sm">
-      <span className="text-charcoal/60">{label}</span>
-      <span className="tabular-nums text-navy">{value}</span>
+      <span className="text-charcoal/70">{label}</span>
+      <span className="tabular-nums" style={{ color: NAVY }}>
+        {value}
+      </span>
     </div>
   );
 }
@@ -71,9 +81,11 @@ export function InvoicePreview({
   const gstPct = parseFloat(form.gst_percent ?? "") || 0;
   const mca = parseFloat(form.mca_charges) || 0;
   const hasItems = form.items.some((i) => i.description);
+  const halfGst = (gstPct / 2).toFixed(gstPct % 2 ? 2 : 0);
 
   return (
     <div
+      style={PRINT_EXACT}
       className={cn(
         "print-area relative mx-auto w-full max-w-[800px] overflow-hidden bg-white text-charcoal shadow-sm print:shadow-none",
         className
@@ -88,27 +100,29 @@ export function InvoicePreview({
         <header className="flex items-start justify-between gap-4">
           <div className="pl-12">
             <Brand variant="onLight" size="lg" />
-            <p className="mt-2 pl-1 text-[10px] font-medium uppercase tracking-[0.34em] text-charcoal/50">
-              Chartered Accountants
-            </p>
           </div>
           <div className="text-right">
-            <p className="font-serif text-4xl font-medium leading-none tracking-tight text-navy">
+            <p className="font-serif text-4xl font-medium leading-none tracking-tight" style={{ color: NAVY }}>
               Invoice
             </p>
-            <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-gold">
+            <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.3em]" style={{ color: GOLD }}>
               Tax Invoice
             </p>
           </div>
         </header>
 
-        <div className="mt-6 h-[2px] w-full bg-gradient-to-r from-gold via-gold/40 to-transparent" />
+        <div
+          className="mt-6 h-[2px] w-full"
+          style={{ background: `linear-gradient(to right, ${GOLD}, ${GOLD}66, transparent)` }}
+        />
 
         {/* Invoice meta + Bill To */}
         <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2">
           <div>
             <SectionLabel>Bill To</SectionLabel>
-            <p className="text-base font-semibold text-navy">{form.customer_name || "—"}</p>
+            <p className="text-base font-semibold" style={{ color: NAVY }}>
+              {form.customer_name || "—"}
+            </p>
             {form.customer_contact && (
               <p className="mt-0.5 text-sm text-charcoal/70">Contact: {form.customer_contact}</p>
             )}
@@ -119,7 +133,7 @@ export function InvoicePreview({
             )}
             {form.customer_gst && (
               <p className="mt-0.5 text-sm text-charcoal/70">
-                GSTIN: <span className="font-medium text-navy">{form.customer_gst}</span>
+                GSTIN: <span className="font-medium" style={{ color: NAVY }}>{form.customer_gst}</span>
               </p>
             )}
           </div>
@@ -136,7 +150,7 @@ export function InvoicePreview({
         {/* Services table — navy header, gold separators, white rows */}
         <table className="mt-7 w-full border-collapse text-sm">
           <thead>
-            <tr className="bg-navy text-left text-white">
+            <tr className="text-left text-white" style={{ backgroundColor: NAVY, ...PRINT_EXACT }}>
               <th className="w-12 px-3 py-2.5 font-medium">#</th>
               <th className="px-3 py-2.5 font-medium">Description of Services</th>
               <th className="w-44 px-3 py-2.5 text-right font-medium">Amount (₹)</th>
@@ -151,7 +165,7 @@ export function InvoicePreview({
               </tr>
             ) : (
               form.items.map((item, idx) => (
-                <tr key={idx} className="border-b border-gold/30 bg-white">
+                <tr key={idx} className="bg-white" style={{ borderBottom: `1px solid ${GOLD}66`, ...PRINT_EXACT }}>
                   <td className="px-3 py-2.5 align-top text-charcoal/70">{idx + 1}</td>
                   <td className="px-3 py-2.5 align-top text-charcoal">{item.description || "—"}</td>
                   <td className="px-3 py-2.5 text-right align-top tabular-nums text-charcoal">
@@ -174,15 +188,18 @@ export function InvoicePreview({
                 value={`− ${formatINR(totals.discountAmount)}`}
               />
             )}
-            <TotalRow label={`CGST (${(gstPct / 2).toFixed(gstPct % 2 ? 2 : 0)}%)`} value={formatINR(totals.cgst)} />
-            <TotalRow label={`SGST (${(gstPct / 2).toFixed(gstPct % 2 ? 2 : 0)}%)`} value={formatINR(totals.sgst)} />
+            <TotalRow label={`CGST (${halfGst}%)`} value={formatINR(totals.cgst)} />
+            <TotalRow label={`SGST (${halfGst}%)`} value={formatINR(totals.sgst)} />
 
             {/* Total Amount — Signature Gold highlight */}
-            <div className="mt-2.5 flex items-center justify-between rounded-md border-l-4 border-gold bg-gold/10 px-4 py-3">
-              <span className="text-sm font-semibold uppercase tracking-wide text-navy">
+            <div
+              className="mt-2.5 flex items-center justify-between rounded-md px-4 py-3"
+              style={{ borderLeft: `4px solid ${GOLD}`, backgroundColor: `${GOLD}1A`, ...PRINT_EXACT }}
+            >
+              <span className="text-sm font-semibold uppercase tracking-wide" style={{ color: NAVY }}>
                 Total Amount
               </span>
-              <span className="text-lg font-bold tabular-nums text-navy">
+              <span className="text-lg font-bold tabular-nums" style={{ color: NAVY }}>
                 {formatINR(totals.total)}
               </span>
             </div>
@@ -190,54 +207,59 @@ export function InvoicePreview({
         </div>
 
         {/* Amount in words */}
-        <div className="mt-4 rounded-md border border-gold/30 bg-ivory px-3 py-2 text-sm">
+        <div
+          className="mt-4 rounded-md bg-ivory px-3 py-2 text-sm"
+          style={{ border: `1px solid ${GOLD}4D` }}
+        >
           <span className="font-semibold text-charcoal/70">Amount in words: </span>
-          <span className="text-navy">{amountInWords(totals.total)}</span>
+          <span style={{ color: NAVY }}>{amountInWords(totals.total)}</span>
         </div>
 
-        {/* Bank details + signatory */}
-        <div className="mt-7 flex flex-col gap-6 sm:flex-row sm:justify-between">
-          <div className="text-sm">
+        {/* Bank details (60%) + signatory (40%) */}
+        <div className="mt-7 grid grid-cols-1 gap-6 sm:grid-cols-5 sm:items-center">
+          <div className="text-sm sm:col-span-3">
             <SectionLabel>Bank Details</SectionLabel>
             <dl className="space-y-0.5 text-charcoal/70">
-              <div className="flex gap-2">
-                <dt className="w-24 text-charcoal/45">A/c Name</dt>
-                <dd className="font-medium text-navy">{FIRM.bank.accountName}</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="w-24 text-charcoal/45">Bank</dt>
-                <dd className="font-medium text-navy">{FIRM.bank.bankName}</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="w-24 text-charcoal/45">A/c No.</dt>
-                <dd className="font-medium tabular-nums text-navy">{FIRM.bank.accountNo}</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="w-24 text-charcoal/45">IFSC</dt>
-                <dd className="font-medium text-navy">{FIRM.bank.ifsc}</dd>
-              </div>
+              {[
+                ["A/c Name", FIRM.bank.accountName],
+                ["Bank", FIRM.bank.bankName],
+                ["A/c No.", FIRM.bank.accountNo],
+                ["IFSC", FIRM.bank.ifsc],
+                ["Branch", FIRM.bank.branch],
+              ].map(([label, value]) => (
+                <div key={label} className="flex gap-3">
+                  <dt className="w-24 shrink-0 text-charcoal/45">{label}</dt>
+                  <dd className="font-medium" style={{ color: NAVY }}>
+                    {value}
+                  </dd>
+                </div>
+              ))}
             </dl>
           </div>
 
-          <div className="flex flex-col items-end justify-end pr-2 text-right">
-            <p className="font-serif text-base font-medium text-navy">For {FIRM.name}</p>
-            <div className="mt-14 border-t border-charcoal/40 pt-1.5 text-xs uppercase tracking-wider text-charcoal/60">
+          <div className="flex flex-col items-center justify-center text-center sm:col-span-2">
+            <p className="font-serif text-base font-medium" style={{ color: NAVY }}>
+              For {FIRM.name}
+            </p>
+            <div className="mt-14 w-44 max-w-full border-t border-charcoal/40 pt-1.5 text-xs uppercase tracking-wider text-charcoal/60">
               Authorised Signatory
             </div>
           </div>
         </div>
       </div>
 
-      {/* Footer band: office address · email · phone */}
-      <footer className="relative z-10 border-t border-gold/40 px-10 pb-9 pt-4 sm:px-12">
-        <div className="pr-24 text-center text-[11px] leading-relaxed text-charcoal/60">
-          <p className="font-serif text-sm font-medium tracking-wide text-navy">{FIRM.name}</p>
-          <p className="mt-0.5">{FIRM.addressLines.join(", ")}</p>
-          <p className="mt-0.5">
-            {FIRM.email} <span className="text-gold">·</span> {FIRM.phone}{" "}
-            <span className="text-gold">·</span> PAN: {FIRM.pan}
+      {/* Footer: darker-ivory strip, thin gold top border */}
+      <footer
+        className="relative z-10 px-10 pb-9 pt-4 sm:px-12"
+        style={{ backgroundColor: "#F3EFE4", borderTop: `2px solid ${GOLD}99`, ...PRINT_EXACT }}
+      >
+        <div className="pr-24 text-center text-[11px] leading-relaxed text-charcoal/65">
+          <p className="font-serif text-sm font-semibold tracking-wide" style={{ color: NAVY }}>
+            {FIRM.name}
           </p>
-          <p className="mt-1 text-charcoal/40">This is a computer-generated invoice.</p>
+          <p className="mt-0.5">{FIRM.addressLines.join(" ")}</p>
+          <p className="mt-0.5">{FIRM.email}</p>
+          <p className="mt-0.5">{FIRM.phone}</p>
         </div>
       </footer>
     </div>

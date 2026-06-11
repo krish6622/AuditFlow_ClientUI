@@ -5,11 +5,11 @@
 export const FIRM = {
   name: "ELANGOVAN ASSOCIATES",
   addressLines: [
-    "No. 24, 2nd Floor, Habibullah Road, T. Nagar",
-    "Chennai - 600 017, Tamil Nadu",
+    "No.6, TVR Road,",
+    "Lakeshmangudi - 614102",
   ],
-  email: "contact@elangovanassociates.in",
-  phone: "+91 44 2834 5678",
+  email: "auditor9865476370@gmail.com",
+  phone: "9865476370",
   pan: "AABCE1234F",
   bank: {
     accountName: "Elangovan Associates",
