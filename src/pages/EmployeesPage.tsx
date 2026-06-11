@@ -205,7 +205,7 @@ export default function EmployeesPage() {
                       {emp.deleted_at ? `${emp.full_name} (Deleted)` : emp.full_name}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={emp.role === "admin" ? "blue" : "secondary"}>
+                      <Badge variant={emp.role === "admin" ? "gold" : "navy"}>
                         {emp.role === "admin" ? "Admin" : "Employee"}
                       </Badge>
                     </TableCell>

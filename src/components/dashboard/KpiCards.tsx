@@ -8,12 +8,12 @@ import { cn } from "@/lib/utils";
 export type Accent = "navy" | "gold" | "emerald" | "charcoal";
 
 const ACCENT: Record<Accent, { icon: string; chip: string; spark: string }> = {
-  navy: { icon: "text-navy dark:text-white", chip: "bg-navy/5 dark:bg-white/10", spark: "#0B132B" },
-  gold: { icon: "text-gold", chip: "bg-gold/10", spark: "#C6A769" },
+  navy: { icon: "text-navy dark:text-white", chip: "bg-navy/5 dark:bg-white/10", spark: "#0B1635" },
+  gold: { icon: "text-gold", chip: "bg-gold/10", spark: "#C79A4B" },
   emerald: {
     icon: "text-emerald-600",
     chip: "bg-emerald-50 dark:bg-emerald-500/10",
-    spark: "#059669",
+    spark: "#22C55E",
   },
   charcoal: {
     icon: "text-charcoal dark:text-white/80",
@@ -55,7 +55,7 @@ export function KpiCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.1 + index * 0.08, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: -4 }}
-      className="rounded-3xl border border-softgray bg-white p-6 shadow-[0_10px_40px_-24px_rgba(11,19,43,0.25)] transition-shadow duration-200 hover:shadow-[0_18px_50px_-22px_rgba(11,19,43,0.32)] dark:border-white/10 dark:bg-[#0f1830]"
+      className="rounded-[20px] border border-softgray bg-white p-6 shadow-[0_10px_40px_-24px_rgba(11,22,53,0.25)] transition-shadow duration-200 hover:shadow-[0_18px_50px_-22px_rgba(11,22,53,0.32)] dark:border-white/10 dark:bg-[#0f1830]"
     >
       <div className="flex items-start justify-between">
         <span className={cn("flex h-11 w-11 items-center justify-center rounded-2xl", a.chip)}>
@@ -95,7 +95,7 @@ export function KpiGrid({ children }: { children: React.ReactNode }) {
 
 export function KpiCardSkeleton() {
   return (
-    <div className="rounded-3xl border border-softgray bg-white p-6 dark:border-white/10 dark:bg-[#0f1830]">
+    <div className="rounded-[20px] border border-softgray bg-white p-6 dark:border-white/10 dark:bg-[#0f1830]">
       <div className="h-11 w-11 animate-pulse rounded-2xl bg-softgray dark:bg-white/10" />
       <div className="mt-5 h-4 w-24 animate-pulse rounded bg-softgray dark:bg-white/10" />
       <div className="mt-2 h-8 w-20 animate-pulse rounded bg-softgray dark:bg-white/10" />

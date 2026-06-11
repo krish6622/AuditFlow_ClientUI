@@ -1,12 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import type { WorkOrderStatus } from "@/types/workOrder";
 
-type Variant = "amber" | "blue" | "green" | "secondary";
+type Variant = "gold" | "navy" | "royal" | "green" | "secondary";
 
 const MAP: Record<WorkOrderStatus, { label: string; variant: Variant }> = {
-  awaiting_assignment: { label: "Awaiting Assignment", variant: "amber" },
-  assigned: { label: "Assigned", variant: "blue" },
-  in_progress: { label: "In Progress", variant: "blue" },
+  awaiting_assignment: { label: "Awaiting Assignment", variant: "gold" },
+  assigned: { label: "Assigned", variant: "navy" },
+  in_progress: { label: "In Progress", variant: "royal" },
   completed: { label: "Completed", variant: "green" },
   closed: { label: "Closed", variant: "secondary" },
   cancelled: { label: "Cancelled", variant: "secondary" },

@@ -14,12 +14,14 @@ export default {
         serif: ['"Cormorant Garamond"', "Georgia", "ui-serif", "serif"],
       },
       colors: {
-        // Elangovan Associates brand palette
-        navy: "#0B132B",
-        gold: "#C6A769",
-        ivory: "#FAF9F6",
-        charcoal: "#2D3748",
-        softgray: "#E5E7EB",
+        // Elangovan Associates brand palette (visiting-card theme)
+        navy: "#0B1635",      // Primary Navy
+        royal: "#1F3F7A",     // Royal Blue
+        gold: "#C79A4B",      // Signature Gold
+        ivory: "#FAF9F6",     // Warm White
+        charcoal: "#1F2937",  // Primary Text
+        softgray: "#E5E7EB",  // Border
+        success: "#22C55E",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
