@@ -18,6 +18,10 @@ const EMPTY: InvoiceFormData = {
   mca_charges: "",
   discount_percent: "",
   items: [{ description: "", amount: "" }],
+  work_order_number: "",
+  customer_contact: "",
+  customer_gst: "",
+  gst_percent: "",
 };
 
 function toFormData(inv: SavedInvoice): InvoiceFormData {
@@ -29,6 +33,10 @@ function toFormData(inv: SavedInvoice): InvoiceFormData {
     mca_charges: String(Number(inv.mca_charges)),
     discount_percent: String(Number(inv.discount_percent)),
     items: inv.items.map((i) => ({ description: i.description, amount: String(Number(i.amount)) })),
+    work_order_number: "",
+    customer_contact: "",
+    customer_gst: "",
+    gst_percent: "",
   };
 }
 

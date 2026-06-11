@@ -84,6 +84,16 @@ export function InvoiceForm({
           </div>
         </div>
         <div className="space-y-2">
+          <Label htmlFor="work_order_number">Work Order Number</Label>
+          <Input
+            id="work_order_number"
+            value={form.work_order_number ?? ""}
+            onChange={(e) => setField("work_order_number", e.target.value)}
+            placeholder="WO-20260611-01"
+            disabled={disabled}
+          />
+        </div>
+        <div className="space-y-2">
           <Label htmlFor="customer_name">Customer Name</Label>
           <Input
             id="customer_name"
@@ -92,6 +102,28 @@ export function InvoiceForm({
             placeholder="Acme Pvt Ltd"
             disabled={disabled}
           />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="customer_contact">Contact Number</Label>
+            <Input
+              id="customer_contact"
+              value={form.customer_contact ?? ""}
+              onChange={(e) => setField("customer_contact", e.target.value)}
+              placeholder="+91 98765 43210"
+              disabled={disabled}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="customer_gst">GST Number</Label>
+            <Input
+              id="customer_gst"
+              value={form.customer_gst ?? ""}
+              onChange={(e) => setField("customer_gst", e.target.value)}
+              placeholder="33ABCDE1234F1Z5"
+              disabled={disabled}
+            />
+          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="customer_address">Customer Address</Label>
@@ -185,6 +217,21 @@ export function InvoiceForm({
               disabled={disabled}
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="gst_percent">GST (%)</Label>
+            <Input
+              id="gst_percent"
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={form.gst_percent ?? ""}
+              onChange={(e) => setField("gst_percent", e.target.value)}
+              placeholder="18"
+              disabled={disabled}
+            />
+            <p className="text-xs text-muted-foreground">Split evenly into CGST + SGST.</p>
+          </div>
         </div>
       </section>
 
@@ -203,9 +250,21 @@ export function InvoiceForm({
             <dt className="text-muted-foreground">Discount</dt>
             <dd className="tabular-nums">− {formatINR(totals.discountAmount)}</dd>
           </div>
-          <div className="flex justify-between border-t pt-1.5 text-base font-semibold">
-            <dt>Net Total</dt>
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">Net (Taxable)</dt>
             <dd className="tabular-nums">{formatINR(totals.net)}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">CGST</dt>
+            <dd className="tabular-nums">{formatINR(totals.cgst)}</dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">SGST</dt>
+            <dd className="tabular-nums">{formatINR(totals.sgst)}</dd>
+          </div>
+          <div className="flex justify-between border-t pt-1.5 text-base font-semibold">
+            <dt>Total Amount</dt>
+            <dd className="tabular-nums">{formatINR(totals.total)}</dd>
           </div>
         </dl>
       </section>
