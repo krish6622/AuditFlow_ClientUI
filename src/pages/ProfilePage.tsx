@@ -6,8 +6,7 @@ import { Card } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
 
 const ROLE_LABEL: Record<string, string> = {
-  super_admin: "Super Admin",
-  org_admin: "Organization Admin",
+  admin: "Admin",
   employee: "Employee",
 };
 

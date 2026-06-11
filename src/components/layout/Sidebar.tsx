@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import {
   ClipboardList,
   FileText,
+  History,
   KeyRound,
   LayoutDashboard,
   Lightbulb,
@@ -30,6 +31,7 @@ const MAIN_NAV: NavItem[] = [
   { label: "Invoices", to: "/invoices", icon: FileText },
   { label: "Employees", to: "/employees", icon: Users, permission: "employee:view" },
   { label: "Customers", to: "/customers", icon: Contact, permission: "customer:view" },
+  { label: "Audit Log", to: "/audit-logs", icon: History, permission: "audit:view" },
 ];
 
 const SETTINGS_NAV: NavItem[] = [

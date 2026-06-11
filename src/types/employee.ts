@@ -1,9 +1,12 @@
+import type { UserRole } from "@/types/auth";
+
 export interface Employee {
   id: string;
   full_name: string;
   phone: string | null;
   email: string | null;
   designation: string | null;
+  role: UserRole;
   is_active: boolean;
   created_at: string;
 }
