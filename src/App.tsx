@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RequirePermission } from "@/components/RequirePermission";
 import { AuthProvider } from "@/context/AuthContext";
+import AuditLogPage from "@/pages/AuditLogPage";
 import ChangePasswordPage from "@/pages/ChangePasswordPage";
 import CustomersPage from "@/pages/CustomersPage";
 import EmployeesPage from "@/pages/EmployeesPage";
@@ -42,6 +43,9 @@ export default function App() {
               </Route>
               <Route element={<RequirePermission permission="employee:view" />}>
                 <Route path="/employees" element={<EmployeesPage />} />
+              </Route>
+              <Route element={<RequirePermission permission="audit:view" />}>
+                <Route path="/audit-logs" element={<AuditLogPage />} />
               </Route>
               <Route element={<RequirePermission permission="customer:view" />}>
                 <Route path="/customers" element={<CustomersPage />} />

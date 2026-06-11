@@ -2,6 +2,7 @@ import type {
   ApiErrorBody,
   TokenResponse,
   UserProfile,
+  UserRole,
 } from "@/types/auth";
 import type {
   WorkOrder,
@@ -20,6 +21,7 @@ import type {
   EmployeeCreateInput,
   EmployeeUpdateInput,
 } from "@/types/employee";
+import type { AuditAction, AuditLogListResponse } from "@/types/audit";
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(
   /\/$/,
@@ -307,6 +309,28 @@ export const employeesApi = {
       method: "PATCH",
       body: { is_active },
     });
+  },
+  setRole(id: string, role: UserRole): Promise<Employee> {
+    return request<Employee>(`/employees/${id}/role`, {
+      method: "PATCH",
+      body: { role },
+    });
+  },
+};
+
+// --------------------------------------------------------------------------- //
+// Audit log API (admin-only)
+// --------------------------------------------------------------------------- //
+export const auditApi = {
+  list(
+    params: { action?: AuditAction | ""; page?: number; page_size?: number } = {}
+  ): Promise<AuditLogListResponse> {
+    const q = new URLSearchParams();
+    if (params.action) q.set("action", params.action);
+    if (params.page) q.set("page", String(params.page));
+    if (params.page_size) q.set("page_size", String(params.page_size));
+    const qs = q.toString();
+    return request<AuditLogListResponse>(`/audit-logs${qs ? `?${qs}` : ""}`);
   },
 };
 

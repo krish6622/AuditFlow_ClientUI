@@ -14,11 +14,11 @@ import type { UserProfile, UserRole } from "@/types/auth";
 // Frontend mirror of the backend RBAC matrix (app/core/rbac.py). Used only to
 // gate UI affordances — the backend remains the source of truth on every call.
 const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
-  super_admin: ["org:manage", "system:stats"],
-  org_admin: [
-    "org:view_own",
+  admin: [
+    "org:manage",
     "employee:manage",
     "employee:view",
+    "audit:view",
     "customer:manage",
     "customer:view",
     "workorder:manage",
@@ -27,7 +27,7 @@ const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "invoice:view",
     "report:view",
   ],
-  employee: ["org:view_own", "workorder:view_assigned", "workorder:update_status"],
+  employee: ["workorder:view_assigned", "workorder:update_status"],
 };
 
 interface AuthContextValue {
