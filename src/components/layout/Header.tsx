@@ -1,5 +1,6 @@
 import { Menu, Moon, Search, Sun } from "lucide-react";
 
+import { Brand } from "@/components/Brand";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { useTheme } from "@/hooks/useTheme";
@@ -22,8 +23,12 @@ export function Header({ onMenuClick }: HeaderProps) {
         <Menu className="h-5 w-5" />
       </button>
 
+      {/* Brand lockup — prominent in the top navigation bar */}
+      <Brand variant="onLight" size="sm" className="hidden shrink-0 sm:flex" />
+      <div className="mx-1 hidden h-8 w-px bg-softgray dark:bg-white/10 sm:block" />
+
       {/* Search pill */}
-      <div className="relative max-w-xl flex-1">
+      <div className="relative max-w-md flex-1">
         <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-charcoal/35 dark:text-white/40" />
         <input
           type="search"

@@ -71,7 +71,6 @@ export function EmployeeStatusModal({ open, onClose, onSaved, workOrder }: Props
       <div className="mb-4 rounded-lg border bg-muted/40 p-3">
         <Detail label="Customer" value={workOrder.customer_name ?? "—"} />
         <Detail label="Description" value={workOrder.description ?? "—"} />
-        <Detail label="Amount" value={`₹ ${Number(workOrder.amount).toLocaleString("en-IN")}`} />
         <Detail label="Due date" value={workOrder.due_date ?? "—"} />
         <div className="flex items-center justify-between gap-4 pt-1 text-sm">
           <span className="text-muted-foreground">Current status</span>

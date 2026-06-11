@@ -337,9 +337,15 @@ export const notificationsApi = {
 // Employees API (Organization Admin)
 // --------------------------------------------------------------------------- //
 export const employeesApi = {
-  list(search?: string): Promise<Employee[]> {
-    const q = search ? `?search=${encodeURIComponent(search)}` : "";
-    return request<Employee[]>(`/employees${q}`);
+  list(
+    params: { search?: string; status?: "active" | "inactive" | ""; include_deleted?: boolean } = {}
+  ): Promise<Employee[]> {
+    const q = new URLSearchParams();
+    if (params.search) q.set("search", params.search);
+    if (params.status) q.set("status", params.status);
+    if (params.include_deleted) q.set("include_deleted", "true");
+    const qs = q.toString();
+    return request<Employee[]>(`/employees${qs ? `?${qs}` : ""}`);
   },
   get(id: string): Promise<Employee> {
     return request<Employee>(`/employees/${id}`);
@@ -355,6 +361,15 @@ export const employeesApi = {
       method: "PATCH",
       body: { is_active },
     });
+  },
+  activate(id: string): Promise<Employee> {
+    return request<Employee>(`/employees/${id}/activate`, { method: "PATCH" });
+  },
+  deactivate(id: string): Promise<Employee> {
+    return request<Employee>(`/employees/${id}/deactivate`, { method: "PATCH" });
+  },
+  remove(id: string): Promise<Employee> {
+    return request<Employee>(`/employees/${id}`, { method: "DELETE" });
   },
   setRole(id: string, role: UserRole): Promise<Employee> {
     return request<Employee>(`/employees/${id}/role`, {

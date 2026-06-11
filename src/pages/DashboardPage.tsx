@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { CircleCheckBig, ClipboardList, FileText, Wallet } from "lucide-react";
+import { CircleCheckBig, ClipboardList, FileText } from "lucide-react";
 
 import { AwaitingAssignmentWidget } from "@/components/dashboard/AwaitingAssignmentWidget";
 import { KpiCard, KpiCardSkeleton, KpiGrid } from "@/components/dashboard/KpiCards";
@@ -10,20 +10,11 @@ import { WelcomeSection } from "@/components/dashboard/WelcomeSection";
 import { useAuth } from "@/context/AuthContext";
 import { useDashboard } from "@/hooks/useDashboard";
 
-function formatINR(amount: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(Number.isNaN(amount) ? 0 : amount);
-}
-
 // Illustrative month-trend series for the KPI sparklines (visual accent).
 const SPARKS = {
   workOrders: [8, 10, 9, 12, 11, 14, 16, 15, 18],
   completed: [4, 6, 5, 7, 9, 8, 11, 12, 14],
   invoices: [2, 3, 3, 5, 4, 6, 7, 8, 9],
-  revenue: [40, 55, 50, 70, 65, 90, 110, 140, 180],
 };
 
 export default function DashboardPage() {
@@ -47,7 +38,7 @@ export default function DashboardPage() {
       {/* KPI cards */}
       <KpiGrid>
         {loading || !totals || !deltas ? (
-          Array.from({ length: 4 }).map((_, i) => <KpiCardSkeleton key={i} />)
+          Array.from({ length: 3 }).map((_, i) => <KpiCardSkeleton key={i} />)
         ) : (
           <>
             <KpiCard
@@ -76,16 +67,6 @@ export default function DashboardPage() {
               deltaPct={deltas.invoices_pct}
               spark={SPARKS.invoices}
               index={2}
-            />
-            <KpiCard
-              label="Total Revenue"
-              value={Number(totals.revenue)}
-              format={formatINR}
-              icon={Wallet}
-              accent="charcoal"
-              deltaPct={deltas.revenue_pct}
-              spark={SPARKS.revenue}
-              index={3}
             />
           </>
         )}

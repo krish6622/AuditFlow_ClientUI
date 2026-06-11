@@ -4,7 +4,6 @@
  */
 export const FIRM = {
   name: "ELANGOVAN ASSOCIATES",
-  tagline: "Chartered Accountants",
   addressLines: [
     "No. 24, 2nd Floor, Habibullah Road, T. Nagar",
     "Chennai - 600 017, Tamil Nadu",

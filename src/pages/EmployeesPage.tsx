@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Pencil, Plus, Power, ShieldCheck, ShieldMinus, Users } from "lucide-react";
+import { Loader2, Plus, ShieldCheck, ShieldMinus, Users } from "lucide-react";
 
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { EmployeeActionsMenu } from "@/components/employees/EmployeeActionsMenu";
 import { EmployeeFormModal } from "@/components/employees/EmployeeFormModal";
 import { RoleChangeModal } from "@/components/employees/RoleChangeModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -20,6 +23,8 @@ import { ApiError, employeesApi } from "@/lib/api";
 import type { Employee } from "@/types/employee";
 
 const LAST_ADMIN_MSG = "At least one Admin must exist in the organization.";
+type StatusFilter = "" | "active" | "inactive";
+type Pending = { kind: "deactivate" | "delete"; emp: Employee };
 
 export default function EmployeesPage() {
   const { can } = useAuth();
@@ -27,42 +32,82 @@ export default function EmployeesPage() {
 
   const [items, setItems] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("");
+  const [showDeleted, setShowDeleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [roleTarget, setRoleTarget] = useState<Employee | null>(null);
+
+  const [pending, setPending] = useState<Pending | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      setItems(await employeesApi.list(search.trim() || undefined));
+      setItems(
+        await employeesApi.list({
+          search: search.trim() || undefined,
+          status: statusFilter || undefined,
+          include_deleted: showDeleted,
+        })
+      );
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to load employees");
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [search, statusFilter, showDeleted]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  // The last remaining active admin cannot be demoted or deactivated (mirrors
-  // the backend guard so the UI disables those actions up front).
-  const activeAdminCount = items.filter((e) => e.role === "admin" && e.is_active).length;
+  // The last remaining active admin can't be demoted, deactivated or deleted
+  // (mirrors the backend guard so those actions are disabled up front).
+  const activeAdminCount = items.filter(
+    (e) => e.role === "admin" && e.is_active && !e.deleted_at
+  ).length;
   const isLastAdmin = (emp: Employee) =>
-    emp.role === "admin" && emp.is_active && activeAdminCount <= 1;
+    emp.role === "admin" && emp.is_active && !emp.deleted_at && activeAdminCount <= 1;
 
-  async function toggleStatus(emp: Employee) {
+  async function activate(emp: Employee) {
     setError(null);
     try {
-      await employeesApi.setStatus(emp.id, !emp.is_active);
+      await employeesApi.activate(emp.id);
       void load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Could not update status");
+      setError(err instanceof ApiError ? err.message : "Could not activate employee");
     }
+  }
+
+  async function confirmPending() {
+    if (!pending) return;
+    setConfirmLoading(true);
+    setConfirmError(null);
+    try {
+      if (pending.kind === "deactivate") await employeesApi.deactivate(pending.emp.id);
+      else await employeesApi.remove(pending.emp.id);
+      setPending(null);
+      void load();
+    } catch (err) {
+      setConfirmError(err instanceof ApiError ? err.message : "Action failed");
+    } finally {
+      setConfirmLoading(false);
+    }
+  }
+
+  function statusBadge(emp: Employee) {
+    if (emp.deleted_at) return <Badge variant="secondary">Deleted</Badge>;
+    return (
+      <Badge variant={emp.is_active ? "green" : "secondary"}>
+        {emp.is_active ? "Active" : "Inactive"}
+      </Badge>
+    );
   }
 
   const colSpan = 6;
@@ -89,12 +134,34 @@ export default function EmployeesPage() {
         )}
       </div>
 
-      <Input
-        placeholder="Search by name, phone, email, designation…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="sm:max-w-md"
-      />
+      {/* Filters */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Input
+          placeholder="Search by name, phone, email, designation…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="sm:max-w-md"
+        />
+        <Select
+          className="sm:w-44"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+          aria-label="Filter by status"
+        >
+          <option value="">All statuses</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </Select>
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={showDeleted}
+            onChange={(e) => setShowDeleted(e.target.checked)}
+            className="h-4 w-4 cursor-pointer rounded border-input accent-navy"
+          />
+          Show deleted
+        </label>
+      </div>
 
       {error && (
         <p className="text-sm text-destructive" role="alert">
@@ -125,15 +192,18 @@ export default function EmployeesPage() {
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={colSpan} className="py-12 text-center text-muted-foreground">
                   <Users className="mx-auto mb-2 h-8 w-8 opacity-40" />
-                  No team members yet. Add your first one.
+                  No team members found.
                 </TableCell>
               </TableRow>
             ) : (
               items.map((emp) => {
                 const lastAdmin = isLastAdmin(emp);
+                const deleted = !!emp.deleted_at;
                 return (
-                  <TableRow key={emp.id}>
-                    <TableCell className="font-medium">{emp.full_name}</TableCell>
+                  <TableRow key={emp.id} className={deleted ? "opacity-60" : undefined}>
+                    <TableCell className="font-medium">
+                      {emp.deleted_at ? `${emp.full_name} (Deleted)` : emp.full_name}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={emp.role === "admin" ? "blue" : "secondary"}>
                         {emp.role === "admin" ? "Admin" : "Employee"}
@@ -141,27 +211,10 @@ export default function EmployeesPage() {
                     </TableCell>
                     <TableCell>{emp.designation ?? "—"}</TableCell>
                     <TableCell>{emp.phone ?? "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant={emp.is_active ? "green" : "secondary"}>
-                        {emp.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
+                    <TableCell>{statusBadge(emp)}</TableCell>
                     <TableCell className="text-right">
-                      {canManage && (
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setEditing(emp);
-                              setModalOpen(true);
-                            }}
-                            aria-label="Edit"
-                            title="Edit details"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-
+                      {canManage && !deleted && (
+                        <div className="flex items-center justify-end gap-1">
                           {emp.role === "admin" ? (
                             <Button
                               variant="ghost"
@@ -184,29 +237,23 @@ export default function EmployeesPage() {
                               <ShieldCheck className="h-4 w-4 text-blue-600" />
                             </Button>
                           )}
-
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => toggleStatus(emp)}
-                            disabled={emp.is_active && lastAdmin}
-                            aria-label={emp.is_active ? "Deactivate" : "Activate"}
-                            title={
-                              emp.is_active && lastAdmin
-                                ? LAST_ADMIN_MSG
-                                : emp.is_active
-                                  ? "Deactivate"
-                                  : "Activate"
-                            }
-                          >
-                            <Power
-                              className={
-                                emp.is_active
-                                  ? "h-4 w-4 text-emerald-600"
-                                  : "h-4 w-4 text-muted-foreground"
-                              }
-                            />
-                          </Button>
+                          <EmployeeActionsMenu
+                            employee={emp}
+                            lastAdmin={lastAdmin}
+                            onEdit={() => {
+                              setEditing(emp);
+                              setModalOpen(true);
+                            }}
+                            onActivate={() => activate(emp)}
+                            onDeactivate={() => {
+                              setConfirmError(null);
+                              setPending({ kind: "deactivate", emp });
+                            }}
+                            onDelete={() => {
+                              setConfirmError(null);
+                              setPending({ kind: "delete", emp });
+                            }}
+                          />
                         </div>
                       )}
                     </TableCell>
@@ -230,6 +277,30 @@ export default function EmployeesPage() {
         employee={roleTarget}
         onClose={() => setRoleTarget(null)}
         onChanged={load}
+      />
+
+      <ConfirmDialog
+        open={pending?.kind === "deactivate"}
+        title="Deactivate Employee"
+        message="This employee will no longer be able to access AuditFlow. Existing records will be preserved."
+        confirmLabel="Deactivate"
+        loading={confirmLoading}
+        error={confirmError}
+        onConfirm={confirmPending}
+        onClose={() => setPending(null)}
+      />
+
+      <ConfirmDialog
+        open={pending?.kind === "delete"}
+        title="Delete Employee"
+        message="This action cannot be undone. The employee will lose access to AuditFlow and be removed from active employee lists."
+        warning="If this employee has active work orders, deletion will be blocked."
+        confirmLabel="Delete Employee"
+        destructive
+        loading={confirmLoading}
+        error={confirmError}
+        onConfirm={confirmPending}
+        onClose={() => setPending(null)}
       />
     </div>
   );

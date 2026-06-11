@@ -9,6 +9,7 @@ import {
   Zap,
 } from "lucide-react";
 
+import { Brand } from "@/components/Brand";
 import heroImage from "@/assets/login/elangovan-login-hero.jpg";
 
 type Icon = ComponentType<{ className?: string }>;
@@ -25,15 +26,6 @@ const VALUES: { icon: Icon; title: string; copy: string }[] = [
   { icon: Users, title: "Collaborative", copy: "Work together and achieve more." },
   { icon: Zap, title: "Efficient", copy: "Save time and increase productivity." },
 ];
-
-/** Champagne-gold square monogram. */
-export function Monogram() {
-  return (
-    <div className="flex h-14 w-14 items-center justify-center rounded-sm border border-gold/70">
-      <span className="font-serif text-2xl font-medium tracking-wide text-gold">EA</span>
-    </div>
-  );
-}
 
 /** Left brand panel — hero image, overlay, vignette, corner blur, brand content. */
 export function AuthBrandPanel() {
@@ -63,17 +55,7 @@ export function AuthBrandPanel() {
 
       <div className="relative z-10 flex h-full flex-col justify-between p-8 sm:p-12 lg:p-14">
         <header className="animate-fade-in-up">
-          <div className="flex items-center gap-4">
-            <Monogram />
-            <div>
-              <h1 className="font-serif text-2xl font-medium leading-tight text-white sm:text-3xl">
-                Elangovan Associates
-              </h1>
-              <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.32em] text-gold">
-                Chartered Accountants
-              </p>
-            </div>
-          </div>
+          <Brand variant="onDark" size="lg" />
         </header>
 
         <div className="hidden max-w-md animate-fade-in-up lg:block" style={{ animationDelay: "120ms" }}>

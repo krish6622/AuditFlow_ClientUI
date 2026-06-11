@@ -32,7 +32,6 @@ export interface WorkOrder {
   description: string | null;
   urgency: WorkOrderUrgency;
   order_date: string | null; // YYYY-MM-DD
-  amount: string; // Decimal serialized as string
   due_date: string | null; // YYYY-MM-DD
   notes: string | null;
   status: WorkOrderStatus;
@@ -57,7 +56,6 @@ export interface WorkOrderInput {
   assigned_employee_name?: string | null;
   urgency?: WorkOrderUrgency;
   order_date?: string | null;
-  amount?: number | string | null;
   due_date?: string | null;
   notes?: string | null;
   status?: WorkOrderStatus;

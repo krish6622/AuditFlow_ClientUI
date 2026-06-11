@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { Brand } from "@/components/Brand";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -130,16 +131,8 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-gold/25 to-transparent" />
 
       {/* Brand */}
-      <div className="relative z-10 flex items-center gap-3 px-5 py-6">
-        <div className="flex h-11 w-11 items-center justify-center rounded-sm border border-gold/70">
-          <span className="font-serif text-lg font-medium tracking-wide text-gold">EA</span>
-        </div>
-        <div className="leading-tight">
-          <p className="font-serif text-lg font-medium text-white">Elangovan Associates</p>
-          <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-gold/80">
-            Chartered Accountants
-          </p>
-        </div>
+      <div className="relative z-10 px-5 py-6">
+        <Brand variant="onDark" size="md" />
       </div>
 
       <div className="relative z-10 mx-5 h-px bg-white/5" />

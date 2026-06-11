@@ -36,7 +36,6 @@ interface FormState {
   urgency: WorkOrderUrgency;
   order_date: string;
   due_date: string;
-  amount: string;
   description: string;
 }
 
@@ -49,7 +48,6 @@ const emptyForm = (): FormState => ({
   urgency: "medium",
   order_date: todayISO(),
   due_date: "",
-  amount: "",
   description: "",
 });
 
@@ -122,11 +120,10 @@ export default function NewWorkOrderPage() {
     if (form.category === "others" && !form.category_other.trim())
       next.category_other = "Please describe the 'Others' category.";
     if (!form.customer_name.trim()) next.customer_name = "Customer name is required.";
-    if (form.contact_number.trim() && !/^[0-9+\-\s()]{6,20}$/.test(form.contact_number.trim()))
+    if (!form.contact_number.trim()) next.contact_number = "Contact number is required.";
+    else if (!/^[0-9+\-\s()]{6,20}$/.test(form.contact_number.trim()))
       next.contact_number = "Enter a valid contact number.";
     if (!form.description.trim()) next.description = "Please describe the work to be done.";
-    if (form.amount.trim() && Number(form.amount) < 0)
-      next.amount = "Amount cannot be negative.";
     if (form.due_date && form.order_date && form.due_date < form.order_date)
       next.due_date = "Due date cannot be before the order date.";
     setErrors(next);
@@ -155,7 +152,6 @@ export default function NewWorkOrderPage() {
       payload.assignee_id = form.assignee_id || null;
       payload.order_date = form.order_date || null;
       payload.due_date = form.due_date || null;
-      payload.amount = form.amount.trim() === "" ? null : form.amount;
     }
     try {
       setCreated(await workOrdersApi.create(payload));
@@ -271,15 +267,15 @@ export default function NewWorkOrderPage() {
               </Fieldset>
               <Fieldset
                 id="contact_number"
-                label="Contact number"
-                hint="(optional)"
+                label="Contact Number"
+                required
                 error={errors.contact_number}
               >
                 <Input
                   id="contact_number"
                   inputMode="tel"
                   value={form.contact_number}
-                  placeholder="9876543210"
+                  placeholder="Enter customer contact number"
                   onChange={(e) => set("contact_number", e.target.value)}
                 />
               </Fieldset>
@@ -318,29 +314,13 @@ export default function NewWorkOrderPage() {
                 />
               </Fieldset>
 
-              <Fieldset id="due_date" label="Due date" hint="(optional)" error={errors.due_date}>
+              <Fieldset id="due_date" label="Due Date" hint="(Optional)" error={errors.due_date}>
                 <Input
                   id="due_date"
                   type="date"
                   value={form.due_date}
+                  placeholder="Select due date"
                   onChange={(e) => set("due_date", e.target.value)}
-                />
-              </Fieldset>
-
-              <Fieldset
-                id="amount"
-                label="Expected amount (₹)"
-                hint="(optional)"
-                error={errors.amount}
-              >
-                <Input
-                  id="amount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.amount}
-                  placeholder="0.00"
-                  onChange={(e) => set("amount", e.target.value)}
                 />
               </Fieldset>
             </CardContent>
