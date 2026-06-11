@@ -49,18 +49,18 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate>
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium text-charcoal">
-              Email Address
+              Email or Mobile Number
             </Label>
             <div className="relative">
               <Mail className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-charcoal/35" />
               <Input
                 id="email"
-                type="email"
+                type="text"
                 autoComplete="username"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@firm.com"
+                placeholder="you@firm.com or mobile number"
                 aria-invalid={!!error}
                 className="h-14 rounded-xl border-softgray bg-white pl-12 pr-4 text-[15px] text-charcoal transition-all duration-200 placeholder:text-charcoal/35 focus-visible:border-navy focus-visible:ring-2 focus-visible:ring-navy/20 focus-visible:ring-offset-0"
               />

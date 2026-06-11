@@ -26,7 +26,11 @@ const ACTION_META: Record<
   role_demoted: { label: "Demoted to Employee", variant: "amber" },
   status_activated: { label: "Activated", variant: "blue" },
   status_deactivated: { label: "Deactivated", variant: "secondary" },
+  user_deleted: { label: "Deleted", variant: "secondary" },
 };
+
+// Defensive fallback so an unrecognised action can never crash the table.
+const FALLBACK_META = { label: "Updated", variant: "secondary" } as const;
 
 const ROLE_LABEL: Record<string, string> = { admin: "Admin", employee: "Employee" };
 
@@ -85,6 +89,7 @@ export default function AuditLogPage() {
         <option value="role_demoted">Demotions</option>
         <option value="status_activated">Activations</option>
         <option value="status_deactivated">Deactivations</option>
+        <option value="user_deleted">Deletions</option>
       </Select>
 
       {error && (
@@ -120,7 +125,7 @@ export default function AuditLogPage() {
               </TableRow>
             ) : (
               items.map((entry) => {
-                const meta = ACTION_META[entry.action];
+                const meta = ACTION_META[entry.action] ?? FALLBACK_META;
                 return (
                   <TableRow key={entry.id}>
                     <TableCell className="whitespace-nowrap text-muted-foreground">

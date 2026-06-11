@@ -67,7 +67,7 @@ function NavRow({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }
         cn(
           "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200",
           isActive
-            ? "bg-white/[0.06] text-white shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]"
+            ? "bg-gold/10 text-white shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]"
             : "text-slate-400 hover:translate-x-0.5 hover:bg-white/[0.03] hover:text-white"
         )
       }
@@ -135,7 +135,8 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <Brand variant="onDark" size="md" />
       </div>
 
-      <div className="relative z-10 mx-5 h-px bg-white/5" />
+      {/* thin gold divider beneath branding */}
+      <div className="relative z-10 mx-5 h-px bg-gradient-to-r from-gold/10 via-gold/50 to-gold/10" />
 
       {/* Navigation */}
       <nav className="relative z-10 flex-1 overflow-y-auto px-3 pb-4">

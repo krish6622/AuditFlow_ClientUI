@@ -173,11 +173,14 @@ export const authApi = {
     return tokens;
   },
 
+  // Self-serve sign-up with an email and/or mobile number. Creates an EMPLOYEE
+  // in the organization and signs them in immediately (single-tenant; admin
+  // access is never granted automatically).
   async register(input: {
-    email: string;
+    email?: string;
+    phone?: string;
     password: string;
     full_name?: string;
-    organization_name?: string;
   }): Promise<TokenResponse> {
     const tokens = await request<TokenResponse>("/auth/register", {
       method: "POST",

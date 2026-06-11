@@ -4,7 +4,8 @@ export type AuditAction =
   | "role_promoted"
   | "role_demoted"
   | "status_activated"
-  | "status_deactivated";
+  | "status_deactivated"
+  | "user_deleted";
 
 export interface AuditLogItem {
   id: string;
