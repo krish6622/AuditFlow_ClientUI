@@ -22,6 +22,7 @@ import type {
   EmployeeUpdateInput,
 } from "@/types/employee";
 import type { AuditAction, AuditLogListResponse } from "@/types/audit";
+import type { NotificationListResponse, AppNotification } from "@/types/notification";
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(
   /\/$/,
@@ -279,11 +280,56 @@ export const workOrdersApi = {
     return request<WorkOrderListResponse>(`/work-orders/mine?${params.toString()}`);
   },
 
+  // Orders the caller raised (their submitted requests).
+  myRequests(query: { status?: WorkOrderStatus | ""; page?: number; page_size?: number } = {}):
+    Promise<WorkOrderListResponse> {
+    const params = new URLSearchParams();
+    if (query.status) params.set("status", query.status);
+    params.set("page", String(query.page ?? 1));
+    params.set("page_size", String(query.page_size ?? 50));
+    return request<WorkOrderListResponse>(`/work-orders/my-requests?${params.toString()}`);
+  },
+
   updateStatus(
     id: string,
     body: { status: WorkOrderStatus; note?: string | null }
   ): Promise<WorkOrder> {
     return request<WorkOrder>(`/work-orders/${id}/status`, { method: "PATCH", body });
+  },
+
+  assign(id: string, body: { assignee_id: string; due_date?: string | null }): Promise<WorkOrder> {
+    return request<WorkOrder>(`/work-orders/${id}/assign`, { method: "PATCH", body });
+  },
+
+  close(id: string): Promise<WorkOrder> {
+    return request<WorkOrder>(`/work-orders/${id}/close`, { method: "PATCH" });
+  },
+
+  cancel(id: string): Promise<WorkOrder> {
+    return request<WorkOrder>(`/work-orders/${id}/cancel`, { method: "PATCH" });
+  },
+};
+
+// --------------------------------------------------------------------------- //
+// Notifications API
+// --------------------------------------------------------------------------- //
+export const notificationsApi = {
+  list(query: { unread_only?: boolean; page?: number; page_size?: number } = {}):
+    Promise<NotificationListResponse> {
+    const params = new URLSearchParams();
+    if (query.unread_only) params.set("unread_only", "true");
+    params.set("page", String(query.page ?? 1));
+    params.set("page_size", String(query.page_size ?? 20));
+    return request<NotificationListResponse>(`/notifications?${params.toString()}`);
+  },
+  unreadCount(): Promise<{ unread: number }> {
+    return request<{ unread: number }>("/notifications/unread-count");
+  },
+  markRead(id: string): Promise<AppNotification> {
+    return request<AppNotification>(`/notifications/${id}/read`, { method: "PATCH" });
+  },
+  markAllRead(): Promise<{ updated: number }> {
+    return request<{ updated: number }>("/notifications/read-all", { method: "POST" });
   },
 };
 

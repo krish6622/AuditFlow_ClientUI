@@ -22,12 +22,17 @@ const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "customer:manage",
     "customer:view",
     "workorder:manage",
+    "workorder:create_request",
     "workorder:view_all",
     "invoice:manage",
     "invoice:view",
     "report:view",
   ],
-  employee: ["workorder:view_assigned", "workorder:update_status"],
+  employee: [
+    "workorder:create_request",
+    "workorder:view_assigned",
+    "workorder:update_status",
+  ],
 };
 
 interface AuthContextValue {

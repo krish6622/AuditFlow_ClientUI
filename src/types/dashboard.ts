@@ -5,6 +5,7 @@ export interface KpiTotals {
   completed_work_orders: number;
   invoices: number;
   revenue: string; // Decimal as string
+  awaiting_assignment: number;
 }
 
 export interface KpiDeltas {
@@ -28,4 +29,5 @@ export interface DashboardSummary {
   totals: KpiTotals;
   deltas: KpiDeltas;
   recent_work_orders: RecentWorkOrder[];
+  awaiting_assignment: RecentWorkOrder[];
 }

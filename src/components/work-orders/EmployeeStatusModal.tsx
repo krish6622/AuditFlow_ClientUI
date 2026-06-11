@@ -8,7 +8,11 @@ import { Modal } from "@/components/ui/modal";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ApiError, workOrdersApi } from "@/lib/api";
-import { WORK_ORDER_STATUSES, type WorkOrder, type WorkOrderStatus } from "@/types/workOrder";
+import {
+  WORK_ORDER_PROGRESS_STATUSES,
+  type WorkOrder,
+  type WorkOrderStatus,
+} from "@/types/workOrder";
 
 interface Props {
   open: boolean;
@@ -27,14 +31,15 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 export function EmployeeStatusModal({ open, onClose, onSaved, workOrder }: Props) {
-  const [status, setStatus] = useState<WorkOrderStatus>("pending");
+  const [status, setStatus] = useState<WorkOrderStatus>("in_progress");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (open && workOrder) {
-      setStatus(workOrder.status);
+      // Employees only move work forward (in progress → completed).
+      setStatus(workOrder.status === "completed" ? "completed" : "in_progress");
       setNote("");
       setError(null);
     }
@@ -82,7 +87,7 @@ export function EmployeeStatusModal({ open, onClose, onSaved, workOrder }: Props
             value={status}
             onChange={(e) => setStatus(e.target.value as WorkOrderStatus)}
           >
-            {WORK_ORDER_STATUSES.map((s) => (
+            {WORK_ORDER_PROGRESS_STATUSES.map((s) => (
               <option key={s.value} value={s.value}>
                 {s.label}
               </option>

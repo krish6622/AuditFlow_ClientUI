@@ -37,7 +37,7 @@ export default function EmployeeDashboardPage() {
   }, [load]);
 
   const counts = {
-    pending: orders.filter((o) => o.status === "pending").length,
+    assigned: orders.filter((o) => o.status === "assigned").length,
     in_progress: orders.filter((o) => o.status === "in_progress").length,
     completed: orders.filter((o) => o.status === "completed").length,
   };
@@ -54,7 +54,7 @@ export default function EmployeeDashboardPage() {
       {/* Quick counts */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Pending", value: counts.pending, cls: "text-amber-600" },
+          { label: "Assigned", value: counts.assigned, cls: "text-amber-600" },
           { label: "In Progress", value: counts.in_progress, cls: "text-blue-600" },
           { label: "Completed", value: counts.completed, cls: "text-emerald-600" },
         ].map((c) => (

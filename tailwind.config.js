@@ -9,7 +9,17 @@ export default {
       screens: { "2xl": "1400px" },
     },
     extend: {
+      fontFamily: {
+        sans: ['Inter', "ui-sans-serif", "system-ui", "-apple-system", "sans-serif"],
+        serif: ['"Cormorant Garamond"', "Georgia", "ui-serif", "serif"],
+      },
       colors: {
+        // Elangovan Associates brand palette
+        navy: "#0B132B",
+        gold: "#C6A769",
+        ivory: "#FAF9F6",
+        charcoal: "#2D3748",
+        softgray: "#E5E7EB",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -44,6 +54,20 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      keyframes: {
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "fade-in-up": {
+          "0%": { opacity: "0", transform: "translateY(18px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+      },
+      animation: {
+        "fade-in": "fade-in 0.7s ease-out both",
+        "fade-in-up": "fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both",
       },
     },
   },

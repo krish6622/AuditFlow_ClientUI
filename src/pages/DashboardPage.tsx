@@ -1,5 +1,7 @@
+import { motion } from "framer-motion";
 import { CircleCheckBig, ClipboardList, FileText, Wallet } from "lucide-react";
 
+import { AwaitingAssignmentWidget } from "@/components/dashboard/AwaitingAssignmentWidget";
 import { KpiCard, KpiCardSkeleton, KpiGrid } from "@/components/dashboard/KpiCards";
 import { PromoCard } from "@/components/dashboard/PromoCard";
 import { QuickActions } from "@/components/dashboard/QuickActions";
@@ -8,28 +10,36 @@ import { WelcomeSection } from "@/components/dashboard/WelcomeSection";
 import { useAuth } from "@/context/AuthContext";
 import { useDashboard } from "@/hooks/useDashboard";
 
-function formatINR(amount: string | number): string {
-  const n = typeof amount === "string" ? Number(amount) : amount;
+function formatINR(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(Number.isNaN(n) ? 0 : n);
+  }).format(Number.isNaN(amount) ? 0 : amount);
 }
+
+// Illustrative month-trend series for the KPI sparklines (visual accent).
+const SPARKS = {
+  workOrders: [8, 10, 9, 12, 11, 14, 16, 15, 18],
+  completed: [4, 6, 5, 7, 9, 8, 11, 12, 14],
+  invoices: [2, 3, 3, 5, 4, 6, 7, 8, 9],
+  revenue: [40, 55, 50, 70, 65, 90, 110, 140, 180],
+};
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { data, loading, error } = useDashboard();
+  const { data, loading, error, reload } = useDashboard();
 
   const totals = data?.totals;
   const deltas = data?.deltas;
+  const awaiting = data?.awaiting_assignment ?? [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <WelcomeSection name={user?.full_name ?? "there"} />
 
       {error && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10">
           {error}
         </div>
       )}
@@ -42,45 +52,73 @@ export default function DashboardPage() {
           <>
             <KpiCard
               label="Total Work Orders"
-              value={String(totals.work_orders)}
+              value={totals.work_orders}
               icon={ClipboardList}
-              accent="blue"
+              accent="navy"
               deltaPct={deltas.work_orders_pct}
+              spark={SPARKS.workOrders}
+              index={0}
             />
             <KpiCard
               label="Completed Orders"
-              value={String(totals.completed_work_orders)}
+              value={totals.completed_work_orders}
               icon={CircleCheckBig}
               accent="emerald"
               deltaPct={deltas.completed_pct}
+              spark={SPARKS.completed}
+              index={1}
             />
             <KpiCard
               label="Total Invoices"
-              value={String(totals.invoices)}
+              value={totals.invoices}
               icon={FileText}
-              accent="amber"
+              accent="gold"
               deltaPct={deltas.invoices_pct}
+              spark={SPARKS.invoices}
+              index={2}
             />
             <KpiCard
               label="Total Revenue"
-              value={formatINR(totals.revenue)}
+              value={Number(totals.revenue)}
+              format={formatINR}
               icon={Wallet}
-              accent="violet"
+              accent="charcoal"
               deltaPct={deltas.revenue_pct}
+              spark={SPARKS.revenue}
+              index={3}
             />
           </>
         )}
       </KpiGrid>
 
+      {/* Awaiting assignment queue (admins) */}
+      {!loading && totals && totals.awaiting_assignment > 0 && (
+        <AwaitingAssignmentWidget
+          items={awaiting}
+          count={totals.awaiting_assignment}
+          onChanged={reload}
+        />
+      )}
+
       {/* Main grid: recent orders + promo (left), quick actions (right) */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          className="space-y-6 lg:col-span-2"
+        >
           <RecentWorkOrders orders={data?.recent_work_orders ?? []} loading={loading} />
           <PromoCard />
-        </div>
-        <div className="lg:col-span-1">
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
+          className="lg:col-span-1"
+        >
           <QuickActions />
-        </div>
+        </motion.div>
       </div>
     </div>
   );
