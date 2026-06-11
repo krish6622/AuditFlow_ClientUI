@@ -10,10 +10,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { ApiError, employeesApi, workOrdersApi } from "@/lib/api";
 import type { Employee } from "@/types/employee";
 import {
+  WORK_ORDER_CATEGORIES,
   WORK_ORDER_STATUSES,
+  WORK_ORDER_URGENCIES,
   type WorkOrder,
+  type WorkOrderCategory,
   type WorkOrderInput,
   type WorkOrderStatus,
+  type WorkOrderUrgency,
 } from "@/types/workOrder";
 
 interface Props {
@@ -25,8 +29,13 @@ interface Props {
 }
 
 interface FormState {
+  category: WorkOrderCategory | "";
+  category_other: string;
   customer_name: string;
+  contact_number: string;
   assignee_id: string;
+  urgency: WorkOrderUrgency;
+  order_date: string;
   description: string;
   amount: string;
   due_date: string;
@@ -35,19 +44,29 @@ interface FormState {
 }
 
 const EMPTY: FormState = {
+  category: "",
+  category_other: "",
   customer_name: "",
+  contact_number: "",
   assignee_id: "",
+  urgency: "medium",
+  order_date: "",
   description: "",
   amount: "",
   due_date: "",
   notes: "",
-  status: "pending",
+  status: "awaiting_assignment",
 };
 
 function fromWorkOrder(wo: WorkOrder): FormState {
   return {
+    category: wo.category ?? "",
+    category_other: wo.category_other ?? "",
     customer_name: wo.customer_name ?? "",
+    contact_number: wo.contact_number ?? "",
     assignee_id: wo.assignee_id ?? "",
+    urgency: wo.urgency ?? "medium",
+    order_date: wo.order_date ?? "",
     description: wo.description ?? "",
     amount: wo.amount ?? "",
     due_date: wo.due_date ?? "",
@@ -72,9 +91,7 @@ export function WorkOrderFormModal({ open, onClose, onSaved, workOrder }: Props)
   }, [open, workOrder]);
 
   // Active employees, plus the currently-assigned one even if now inactive.
-  const assignable = employees.filter(
-    (e) => e.is_active || e.id === form.assignee_id
-  );
+  const assignable = employees.filter((e) => e.is_active || e.id === form.assignee_id);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -83,12 +100,27 @@ export function WorkOrderFormModal({ open, onClose, onSaved, workOrder }: Props)
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!form.category) {
+      setError("Please choose a category.");
+      return;
+    }
+    if (form.category === "others" && !form.category_other.trim()) {
+      setError("Please describe the 'Others' category.");
+      return;
+    }
+
     setSaving(true);
     const payload: WorkOrderInput = {
+      category: form.category,
+      category_other: form.category === "others" ? form.category_other.trim() : null,
       customer_name: form.customer_name.trim(),
+      contact_number: form.contact_number.trim() || null,
       description: form.description.trim(),
       assignee_id: form.assignee_id || null,
-      amount: form.amount === "" ? 0 : form.amount,
+      urgency: form.urgency,
+      order_date: form.order_date || null,
+      amount: form.amount === "" ? null : form.amount,
       due_date: form.due_date || null,
       notes: form.notes.trim() || null,
       status: form.status,
@@ -113,9 +145,53 @@ export function WorkOrderFormModal({ open, onClose, onSaved, workOrder }: Props)
       open={open}
       onClose={onClose}
       title={isEdit ? `Edit ${workOrder?.number}` : "Create work order"}
-      description={isEdit ? undefined : "Add a new job for a customer."}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="wo_category">Category</Label>
+            <Select
+              id="wo_category"
+              value={form.category}
+              onChange={(e) => set("category", e.target.value as WorkOrderCategory | "")}
+            >
+              <option value="" disabled>
+                Select a category…
+              </option>
+              {WORK_ORDER_CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="wo_urgency">Urgency</Label>
+            <Select
+              id="wo_urgency"
+              value={form.urgency}
+              onChange={(e) => set("urgency", e.target.value as WorkOrderUrgency)}
+            >
+              {WORK_ORDER_URGENCIES.map((u) => (
+                <option key={u.value} value={u.value}>
+                  {u.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </div>
+
+        {form.category === "others" && (
+          <div className="space-y-2">
+            <Label htmlFor="wo_category_other">Describe the category</Label>
+            <Input
+              id="wo_category_other"
+              value={form.category_other}
+              onChange={(e) => set("category_other", e.target.value)}
+            />
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="customer_name">Customer name</Label>
@@ -127,22 +203,31 @@ export function WorkOrderFormModal({ open, onClose, onSaved, workOrder }: Props)
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="employee">Assign employee</Label>
-            <Select
-              id="employee"
-              value={form.assignee_id}
-              onChange={(e) => set("assignee_id", e.target.value)}
-            >
-              <option value="">Unassigned</option>
-              {assignable.map((emp) => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.full_name}
-                  {emp.designation ? ` · ${emp.designation}` : ""}
-                  {emp.is_active ? "" : " (inactive)"}
-                </option>
-              ))}
-            </Select>
+            <Label htmlFor="contact_number">Contact number</Label>
+            <Input
+              id="contact_number"
+              value={form.contact_number}
+              onChange={(e) => set("contact_number", e.target.value)}
+            />
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="employee">Assign employee</Label>
+          <Select
+            id="employee"
+            value={form.assignee_id}
+            onChange={(e) => set("assignee_id", e.target.value)}
+          >
+            <option value="">Unassigned</option>
+            {assignable.map((emp) => (
+              <option key={emp.id} value={emp.id}>
+                {emp.full_name}
+                {emp.designation ? ` · ${emp.designation}` : ""}
+                {emp.is_active ? "" : " (inactive)"}
+              </option>
+            ))}
+          </Select>
         </div>
 
         <div className="space-y-2">
@@ -155,16 +240,14 @@ export function WorkOrderFormModal({ open, onClose, onSaved, workOrder }: Props)
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount (₹)</Label>
+            <Label htmlFor="order_date">Date</Label>
             <Input
-              id="amount"
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.amount}
-              onChange={(e) => set("amount", e.target.value)}
+              id="order_date"
+              type="date"
+              value={form.order_date}
+              onChange={(e) => set("order_date", e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -174,6 +257,17 @@ export function WorkOrderFormModal({ open, onClose, onSaved, workOrder }: Props)
               type="date"
               value={form.due_date}
               onChange={(e) => set("due_date", e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount (₹)</Label>
+            <Input
+              id="amount"
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.amount}
+              onChange={(e) => set("amount", e.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -194,11 +288,7 @@ export function WorkOrderFormModal({ open, onClose, onSaved, workOrder }: Props)
 
         <div className="space-y-2">
           <Label htmlFor="notes">Notes</Label>
-          <Textarea
-            id="notes"
-            value={form.notes}
-            onChange={(e) => set("notes", e.target.value)}
-          />
+          <Textarea id="notes" value={form.notes} onChange={(e) => set("notes", e.target.value)} />
         </div>
 
         {error && (

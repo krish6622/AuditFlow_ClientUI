@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, Pencil, Plus, Receipt, Trash2 } from "lucide-react";
+import { Ban, CheckCircle2, Loader2, Pencil, Plus, Receipt, Trash2, UserPlus } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,18 +14,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { AssignWorkOrderModal } from "@/components/work-orders/AssignWorkOrderModal";
 import { WorkOrderFormModal } from "@/components/work-orders/WorkOrderFormModal";
 import { ApiError, workOrdersApi } from "@/lib/api";
 import {
+  categoryLabel,
   WORK_ORDER_STATUSES,
   type WorkOrder,
   type WorkOrderStatus,
 } from "@/types/workOrder";
 
-const STATUS_BADGE: Record<WorkOrderStatus, { label: string; variant: "amber" | "blue" | "green" }> = {
-  pending: { label: "Pending", variant: "amber" },
+const STATUS_BADGE: Record<
+  WorkOrderStatus,
+  { label: string; variant: "amber" | "blue" | "green" | "secondary" }
+> = {
+  awaiting_assignment: { label: "Awaiting Assignment", variant: "amber" },
+  assigned: { label: "Assigned", variant: "blue" },
   in_progress: { label: "In Progress", variant: "blue" },
   completed: { label: "Completed", variant: "green" },
+  closed: { label: "Closed", variant: "secondary" },
+  cancelled: { label: "Cancelled", variant: "secondary" },
 };
 
 const PAGE_SIZE = 20;
@@ -51,6 +59,7 @@ export default function WorkOrdersPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<WorkOrder | null>(null);
+  const [assignTarget, setAssignTarget] = useState<WorkOrder | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -66,15 +75,14 @@ export default function WorkOrdersPage() {
     });
   }
 
-  // Open the create modal when arrived via the "Create Work Order" quick action.
+  // Arriving via the "Create Work Order" quick action goes to the dedicated page.
   useEffect(() => {
     if (searchParams.get("new") === "1") {
-      setEditing(null);
-      setModalOpen(true);
       searchParams.delete("new");
       setSearchParams(searchParams, { replace: true });
+      navigate("/work-orders/new");
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, navigate]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -99,11 +107,6 @@ export default function WorkOrdersPage() {
     void load();
   }, [load]);
 
-  function openCreate() {
-    setEditing(null);
-    setModalOpen(true);
-  }
-
   function openEdit(wo: WorkOrder) {
     setEditing(wo);
     setModalOpen(true);
@@ -119,6 +122,28 @@ export default function WorkOrdersPage() {
     }
   }
 
+  async function handleClose(wo: WorkOrder) {
+    if (!window.confirm(`Close ${wo.number}? This marks the order reviewed and complete.`)) return;
+    setError(null);
+    try {
+      await workOrdersApi.close(wo.id);
+      void load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not close the order");
+    }
+  }
+
+  async function handleCancel(wo: WorkOrder) {
+    if (!window.confirm(`Cancel ${wo.number}?`)) return;
+    setError(null);
+    try {
+      await workOrdersApi.cancel(wo.id);
+      void load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not cancel the order");
+    }
+  }
+
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
@@ -130,7 +155,7 @@ export default function WorkOrdersPage() {
             Create, assign, and track jobs for your customers.
           </p>
         </div>
-        <Button onClick={openCreate}>
+        <Button onClick={() => navigate("/work-orders/new")}>
           <Plus className="h-4 w-4" />
           New work order
         </Button>
@@ -175,6 +200,7 @@ export default function WorkOrdersPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Number</TableHead>
+              <TableHead>Category</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Employee</TableHead>
               <TableHead>Description</TableHead>
@@ -187,13 +213,13 @@ export default function WorkOrdersPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
                   <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                 </TableCell>
               </TableRow>
             ) : items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
                   No work orders yet. Create your first one.
                 </TableCell>
               </TableRow>
@@ -203,6 +229,7 @@ export default function WorkOrdersPage() {
                 return (
                   <TableRow key={wo.id}>
                     <TableCell className="font-medium">{wo.number}</TableCell>
+                    <TableCell>{categoryLabel(wo.category, wo.category_other)}</TableCell>
                     <TableCell>{wo.customer_name}</TableCell>
                     <TableCell>{wo.assigned_employee_name ?? "—"}</TableCell>
                     <TableCell className="max-w-[16rem] truncate" title={wo.description ?? ""}>
@@ -217,15 +244,50 @@ export default function WorkOrdersPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        {wo.status === "completed" && (
+                        {(wo.status === "awaiting_assignment" || wo.status === "assigned") && (
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => createInvoice(wo)}
-                            aria-label="Create invoice"
-                            title="Create invoice from this order"
+                            onClick={() => setAssignTarget(wo)}
+                            aria-label="Assign"
+                            title={wo.status === "assigned" ? "Reassign" : "Assign employee"}
                           >
-                            <Receipt className="h-4 w-4 text-emerald-600" />
+                            <UserPlus className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        )}
+                        {wo.status === "completed" && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleClose(wo)}
+                              aria-label="Review & close"
+                              title="Review & close"
+                            >
+                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => createInvoice(wo)}
+                              aria-label="Create invoice"
+                              title="Create invoice from this order"
+                            >
+                              <Receipt className="h-4 w-4 text-emerald-600" />
+                            </Button>
+                          </>
+                        )}
+                        {(wo.status === "awaiting_assignment" ||
+                          wo.status === "assigned" ||
+                          wo.status === "in_progress") && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleCancel(wo)}
+                            aria-label="Cancel order"
+                            title="Cancel order"
+                          >
+                            <Ban className="h-4 w-4 text-amber-600" />
                           </Button>
                         )}
                         <Button
@@ -285,6 +347,13 @@ export default function WorkOrdersPage() {
         onClose={() => setModalOpen(false)}
         onSaved={load}
         workOrder={editing}
+      />
+
+      <AssignWorkOrderModal
+        open={assignTarget !== null}
+        workOrder={assignTarget}
+        onClose={() => setAssignTarget(null)}
+        onAssigned={load}
       />
     </div>
   );

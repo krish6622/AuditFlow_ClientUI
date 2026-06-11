@@ -13,8 +13,12 @@ import HomePage from "@/pages/HomePage";
 import InvoiceBuilderPage from "@/pages/InvoiceBuilderPage";
 import InvoicesPage from "@/pages/InvoicesPage";
 import LoginPage from "@/pages/LoginPage";
+import MyRequestsPage from "@/pages/MyRequestsPage";
+import NewWorkOrderPage from "@/pages/NewWorkOrderPage";
 import ProfilePage from "@/pages/ProfilePage";
+import ReportsPage from "@/pages/ReportsPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import SettingsPage from "@/pages/SettingsPage";
 import SignupPage from "@/pages/SignupPage";
 import WorkOrdersPage from "@/pages/WorkOrdersPage";
 
@@ -41,6 +45,10 @@ export default function App() {
               <Route element={<RequirePermission permission="workorder:view_all" />}>
                 <Route path="/work-orders" element={<WorkOrdersPage />} />
               </Route>
+              <Route element={<RequirePermission permission="workorder:create_request" />}>
+                <Route path="/work-orders/new" element={<NewWorkOrderPage />} />
+                <Route path="/my-requests" element={<MyRequestsPage />} />
+              </Route>
               <Route element={<RequirePermission permission="employee:view" />}>
                 <Route path="/employees" element={<EmployeesPage />} />
               </Route>
@@ -50,11 +58,15 @@ export default function App() {
               <Route element={<RequirePermission permission="customer:view" />}>
                 <Route path="/customers" element={<CustomersPage />} />
               </Route>
+              <Route element={<RequirePermission permission="report:view" />}>
+                <Route path="/reports" element={<ReportsPage />} />
+              </Route>
 
               {/* Open to everyone (invoicing is a public module) */}
               <Route path="/invoices" element={<InvoicesPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/change-password" element={<ChangePasswordPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>
 
