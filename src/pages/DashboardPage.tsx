@@ -3,6 +3,7 @@ import { CircleCheckBig, ClipboardList, FileText } from "lucide-react";
 
 import { AwaitingAssignmentWidget } from "@/components/dashboard/AwaitingAssignmentWidget";
 import { KpiCard, KpiCardSkeleton, KpiGrid } from "@/components/dashboard/KpiCards";
+import { PendingApprovalsWidget } from "@/components/dashboard/PendingApprovalsWidget";
 import { PromoCard } from "@/components/dashboard/PromoCard";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { RecentWorkOrders } from "@/components/dashboard/RecentWorkOrders";
@@ -18,12 +19,14 @@ const SPARKS = {
 };
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, can } = useAuth();
   const { data, loading, error, reload } = useDashboard();
 
   const totals = data?.totals;
   const deltas = data?.deltas;
   const awaiting = data?.awaiting_assignment ?? [];
+  const pending = data?.pending_approvals ?? [];
+  const canApprove = can("employee:manage");
 
   return (
     <div className="space-y-8">
@@ -71,6 +74,15 @@ export default function DashboardPage() {
           </>
         )}
       </KpiGrid>
+
+      {/* Pending employee approvals (admins) */}
+      {!loading && canApprove && totals && totals.pending_approvals > 0 && (
+        <PendingApprovalsWidget
+          items={pending}
+          count={totals.pending_approvals}
+          onChanged={reload}
+        />
+      )}
 
       {/* Awaiting assignment queue (admins) */}
       {!loading && totals && totals.awaiting_assignment > 0 && (

@@ -1,13 +1,13 @@
 import { useMemo, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
   ArrowLeft,
-  Building2,
   Eye,
   EyeOff,
   Loader2,
   Lock,
   Mail,
+  MailCheck,
   User,
 } from "lucide-react";
 
@@ -16,8 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { ApiError } from "@/lib/api";
-
-const DEFAULT_ORG = "Elangovan Associates";
 
 type Strength = { bars: 0 | 1 | 2 | 3; label: string; bar: string; text: string };
 
@@ -36,15 +34,16 @@ function passwordStrength(pw: string): Strength {
 
 export default function SignupPage() {
   const { register } = useAuth();
-  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
-  const [orgName, setOrgName] = useState(DEFAULT_ORG);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Set once registration succeeds — the account is pending admin approval and
+  // is NOT signed in, so we show a confirmation instead of entering the app.
+  const [submitted, setSubmitted] = useState<string | null>(null);
 
   const strength = useMemo(() => passwordStrength(password), [password]);
 
@@ -57,13 +56,12 @@ export default function SignupPage() {
     }
     setSubmitting(true);
     try {
-      await register({
+      const res = await register({
         email,
         password,
         full_name: fullName.trim() || undefined,
-        organization_name: orgName.trim() || undefined,
       });
-      navigate("/", { replace: true });
+      setSubmitted(res.message);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Unable to create account");
     } finally {
@@ -73,6 +71,36 @@ export default function SignupPage() {
 
   const inputClass =
     "h-14 rounded-xl border-softgray bg-white pl-12 pr-4 text-[15px] text-charcoal transition-all duration-200 placeholder:text-charcoal/35 focus-visible:border-navy focus-visible:ring-2 focus-visible:ring-navy/20 focus-visible:ring-offset-0";
+
+  if (submitted) {
+    return (
+      <AuthShell>
+        <div className="flex w-full max-w-[520px] animate-fade-in flex-col gap-4">
+          <div className="rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-[0_30px_70px_-25px_rgba(11,19,43,0.22)] sm:p-10">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50">
+              <MailCheck className="h-8 w-8 text-emerald-600" />
+            </div>
+            <h2 className="mt-6 font-serif text-3xl font-semibold tracking-tight text-navy">
+              Registration submitted
+            </h2>
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-charcoal/65">
+              {submitted}
+            </p>
+            <div className="mt-6 rounded-xl border border-gold/30 bg-gold/5 px-4 py-3 text-sm text-charcoal/70">
+              Your account is awaiting administrator approval. You'll be able to
+              sign in once it's approved.
+            </div>
+            <Link
+              to="/login"
+              className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#16223f] to-navy text-sm font-medium text-white shadow-[0_12px_30px_-12px_rgba(11,19,43,0.7)] transition-all duration-200 hover:-translate-y-0.5"
+            >
+              Back to Sign In
+            </Link>
+          </div>
+        </div>
+      </AuthShell>
+    );
+  }
 
   return (
     <AuthShell>
@@ -90,7 +118,8 @@ export default function SignupPage() {
             Create your account
           </h2>
           <p className="mt-2 text-sm text-charcoal/60">
-            Start managing your work orders and invoices.
+            Request access to Elangovan Associates. An administrator will approve
+            your account before you can sign in.
           </p>
           <div className="mt-5 h-px w-14 bg-gradient-to-r from-gold to-gold/20" />
 
@@ -184,24 +213,6 @@ export default function SignupPage() {
               </div>
             </div>
 
-            {/* Organization name */}
-            <div className="space-y-2">
-              <Label htmlFor="orgName" className="text-sm font-medium text-charcoal">
-                Organization Name <span className="font-normal text-charcoal/45">(optional)</span>
-              </Label>
-              <div className="relative">
-                <Building2 className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-charcoal/35" />
-                <Input
-                  id="orgName"
-                  autoComplete="organization"
-                  value={orgName}
-                  onChange={(e) => setOrgName(e.target.value)}
-                  placeholder="Enter your organization name"
-                  className={inputClass}
-                />
-              </div>
-            </div>
-
             {error && (
               <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
                 {error}
@@ -214,7 +225,7 @@ export default function SignupPage() {
               className="group relative flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#16223f] to-navy text-[15px] font-medium text-white shadow-[0_12px_30px_-12px_rgba(11,19,43,0.7)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-12px_rgba(11,19,43,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
             >
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {submitting ? "Creating account…" : "Create Account"}
+              {submitting ? "Submitting…" : "Request Access"}
             </button>
           </form>
 

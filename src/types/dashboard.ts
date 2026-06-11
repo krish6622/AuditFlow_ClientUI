@@ -5,6 +5,16 @@ export interface KpiTotals {
   completed_work_orders: number;
   invoices: number;
   awaiting_assignment: number;
+  pending_approvals: number;
+}
+
+export interface PendingEmployee {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  designation: string | null;
+  created_at: string;
 }
 
 export interface KpiDeltas {
@@ -27,4 +37,5 @@ export interface DashboardSummary {
   deltas: KpiDeltas;
   recent_work_orders: RecentWorkOrder[];
   awaiting_assignment: RecentWorkOrder[];
+  pending_approvals: PendingEmployee[];
 }

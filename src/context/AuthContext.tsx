@@ -9,7 +9,7 @@ import {
 } from "react";
 
 import { authApi, tokenStore } from "@/lib/api";
-import type { UserProfile, UserRole } from "@/types/auth";
+import type { RegisterResponse, UserProfile, UserRole } from "@/types/auth";
 
 // Frontend mirror of the backend RBAC matrix (app/core/rbac.py). Used only to
 // gate UI affordances — the backend remains the source of truth on every call.
@@ -43,8 +43,7 @@ interface AuthContextValue {
     email: string;
     password: string;
     full_name?: string;
-    organization_name?: string;
-  }) => Promise<void>;
+  }) => Promise<RegisterResponse>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   can: (permission: string) => boolean;
@@ -81,10 +80,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(await authApi.me());
   }, []);
 
-  const register = useCallback<AuthContextValue["register"]>(async (input) => {
-    await authApi.register(input);
-    setUser(await authApi.me());
-  }, []);
+  // Registration does not sign the user in: the account is created
+  // PENDING_APPROVAL and must be approved by an admin first. Just relay the
+  // backend's confirmation message to the caller.
+  const register = useCallback<AuthContextValue["register"]>(
+    (input) => authApi.register(input),
+    []
+  );
 
   const logout = useCallback(async () => {
     await authApi.logout();

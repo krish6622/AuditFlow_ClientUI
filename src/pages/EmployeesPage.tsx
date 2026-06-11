@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Plus, ShieldCheck, ShieldMinus, Users } from "lucide-react";
+import {
+  Check,
+  Loader2,
+  Plus,
+  ShieldCheck,
+  ShieldMinus,
+  Users,
+  X,
+} from "lucide-react";
 
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { EmployeeActionsMenu } from "@/components/employees/EmployeeActionsMenu";
@@ -23,8 +31,8 @@ import { ApiError, employeesApi } from "@/lib/api";
 import type { Employee } from "@/types/employee";
 
 const LAST_ADMIN_MSG = "At least one Admin must exist in the organization.";
-type StatusFilter = "" | "active" | "inactive";
-type Pending = { kind: "deactivate" | "delete"; emp: Employee };
+type StatusFilter = "" | "active" | "inactive" | "pending";
+type Pending = { kind: "deactivate" | "delete" | "reject"; emp: Employee };
 
 export default function EmployeesPage() {
   const { can } = useAuth();
@@ -85,12 +93,23 @@ export default function EmployeesPage() {
     }
   }
 
+  async function approve(emp: Employee) {
+    setError(null);
+    try {
+      await employeesApi.approve(emp.id);
+      void load();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not approve account");
+    }
+  }
+
   async function confirmPending() {
     if (!pending) return;
     setConfirmLoading(true);
     setConfirmError(null);
     try {
       if (pending.kind === "deactivate") await employeesApi.deactivate(pending.emp.id);
+      else if (pending.kind === "reject") await employeesApi.reject(pending.emp.id);
       else await employeesApi.remove(pending.emp.id);
       setPending(null);
       void load();
@@ -103,9 +122,11 @@ export default function EmployeesPage() {
 
   function statusBadge(emp: Employee) {
     if (emp.deleted_at) return <Badge variant="secondary">Deleted</Badge>;
+    if (emp.status === "pending_approval")
+      return <Badge variant="amber">Pending Approval</Badge>;
     return (
-      <Badge variant={emp.is_active ? "green" : "secondary"}>
-        {emp.is_active ? "Active" : "Inactive"}
+      <Badge variant={emp.status === "active" ? "green" : "secondary"}>
+        {emp.status === "active" ? "Active" : "Inactive"}
       </Badge>
     );
   }
@@ -149,6 +170,7 @@ export default function EmployeesPage() {
           aria-label="Filter by status"
         >
           <option value="">All statuses</option>
+          <option value="pending">Pending Approval</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </Select>
@@ -213,7 +235,32 @@ export default function EmployeesPage() {
                     <TableCell>{emp.phone ?? "—"}</TableCell>
                     <TableCell>{statusBadge(emp)}</TableCell>
                     <TableCell className="text-right">
-                      {canManage && !deleted && (
+                      {canManage && !deleted && emp.status === "pending_approval" && (
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                            onClick={() => approve(emp)}
+                          >
+                            <Check className="h-4 w-4" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-red-200 text-red-600 hover:bg-red-50"
+                            onClick={() => {
+                              setConfirmError(null);
+                              setPending({ kind: "reject", emp });
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                            Reject
+                          </Button>
+                        </div>
+                      )}
+                      {canManage && !deleted && emp.status !== "pending_approval" && (
                         <div className="flex items-center justify-end gap-1">
                           {emp.role === "admin" ? (
                             <Button
@@ -284,6 +331,18 @@ export default function EmployeesPage() {
         title="Deactivate Employee"
         message="This employee will no longer be able to access AuditFlow. Existing records will be preserved."
         confirmLabel="Deactivate"
+        loading={confirmLoading}
+        error={confirmError}
+        onConfirm={confirmPending}
+        onClose={() => setPending(null)}
+      />
+
+      <ConfirmDialog
+        open={pending?.kind === "reject"}
+        title="Reject Registration"
+        message="This pending account will be rejected and won't be able to sign in. You can reactivate it later from the employee list if needed."
+        confirmLabel="Reject"
+        destructive
         loading={confirmLoading}
         error={confirmError}
         onConfirm={confirmPending}

@@ -1,5 +1,6 @@
 import type {
   ApiErrorBody,
+  RegisterResponse,
   TokenResponse,
   UserProfile,
   UserRole,
@@ -173,19 +174,19 @@ export const authApi = {
     return tokens;
   },
 
-  async register(input: {
+  // Self-serve sign-up. Returns a message only — the new account is created
+  // PENDING_APPROVAL and cannot sign in until an admin approves it, so no tokens
+  // are issued and the user is not logged in.
+  register(input: {
     email: string;
     password: string;
     full_name?: string;
-    organization_name?: string;
-  }): Promise<TokenResponse> {
-    const tokens = await request<TokenResponse>("/auth/register", {
+  }): Promise<RegisterResponse> {
+    return request<RegisterResponse>("/auth/register", {
       method: "POST",
       body: input,
       auth: false,
     });
-    tokenStore.set(tokens);
-    return tokens;
   },
 
   me(): Promise<UserProfile> {
@@ -338,7 +339,11 @@ export const notificationsApi = {
 // --------------------------------------------------------------------------- //
 export const employeesApi = {
   list(
-    params: { search?: string; status?: "active" | "inactive" | ""; include_deleted?: boolean } = {}
+    params: {
+      search?: string;
+      status?: "active" | "inactive" | "pending" | "";
+      include_deleted?: boolean;
+    } = {}
   ): Promise<Employee[]> {
     const q = new URLSearchParams();
     if (params.search) q.set("search", params.search);
@@ -361,6 +366,12 @@ export const employeesApi = {
       method: "PATCH",
       body: { is_active },
     });
+  },
+  approve(id: string): Promise<Employee> {
+    return request<Employee>(`/employees/${id}/approve`, { method: "PATCH" });
+  },
+  reject(id: string): Promise<Employee> {
+    return request<Employee>(`/employees/${id}/reject`, { method: "PATCH" });
   },
   activate(id: string): Promise<Employee> {
     return request<Employee>(`/employees/${id}/activate`, { method: "PATCH" });

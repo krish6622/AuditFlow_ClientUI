@@ -1,4 +1,4 @@
-import type { UserRole } from "@/types/auth";
+import type { UserRole, UserStatus } from "@/types/auth";
 
 export interface Employee {
   id: string;
@@ -7,6 +7,7 @@ export interface Employee {
   email: string | null;
   designation: string | null;
   role: UserRole;
+  status: UserStatus;
   is_active: boolean;
   created_at: string;
   deleted_at: string | null;
