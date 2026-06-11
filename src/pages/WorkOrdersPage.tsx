@@ -38,16 +38,6 @@ const STATUS_BADGE: Record<
 
 const PAGE_SIZE = 20;
 
-function formatAmount(amount: string): string {
-  const n = Number(amount);
-  if (Number.isNaN(n)) return amount;
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 2,
-  }).format(n);
-}
-
 export default function WorkOrdersPage() {
   const [items, setItems] = useState<WorkOrder[]>([]);
   const [total, setTotal] = useState(0);
@@ -69,7 +59,7 @@ export default function WorkOrdersPage() {
       state: {
         prefill: {
           customerName: wo.customer_name ?? "",
-          items: [{ description: wo.description ?? "", amount: Number(wo.amount) || 0 }],
+          items: [{ description: wo.description ?? "", amount: 0 }],
         },
       },
     });
@@ -204,7 +194,6 @@ export default function WorkOrdersPage() {
               <TableHead>Customer</TableHead>
               <TableHead>Employee</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
               <TableHead>Due</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -213,13 +202,13 @@ export default function WorkOrdersPage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
                   <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                 </TableCell>
               </TableRow>
             ) : items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
                   No work orders yet. Create your first one.
                 </TableCell>
               </TableRow>
@@ -234,9 +223,6 @@ export default function WorkOrdersPage() {
                     <TableCell>{wo.assigned_employee_name ?? "—"}</TableCell>
                     <TableCell className="max-w-[16rem] truncate" title={wo.description ?? ""}>
                       {wo.description}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatAmount(wo.amount)}
                     </TableCell>
                     <TableCell>{wo.due_date ?? "—"}</TableCell>
                     <TableCell>

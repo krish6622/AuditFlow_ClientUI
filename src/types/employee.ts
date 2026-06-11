@@ -9,6 +9,7 @@ export interface Employee {
   role: UserRole;
   is_active: boolean;
   created_at: string;
+  deleted_at: string | null;
 }
 
 export interface EmployeeCreateInput {

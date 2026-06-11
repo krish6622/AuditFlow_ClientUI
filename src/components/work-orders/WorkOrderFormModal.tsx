@@ -37,7 +37,6 @@ interface FormState {
   urgency: WorkOrderUrgency;
   order_date: string;
   description: string;
-  amount: string;
   due_date: string;
   notes: string;
   status: WorkOrderStatus;
@@ -52,7 +51,6 @@ const EMPTY: FormState = {
   urgency: "medium",
   order_date: "",
   description: "",
-  amount: "",
   due_date: "",
   notes: "",
   status: "awaiting_assignment",
@@ -68,7 +66,6 @@ function fromWorkOrder(wo: WorkOrder): FormState {
     urgency: wo.urgency ?? "medium",
     order_date: wo.order_date ?? "",
     description: wo.description ?? "",
-    amount: wo.amount ?? "",
     due_date: wo.due_date ?? "",
     notes: wo.notes ?? "",
     status: wo.status,
@@ -109,18 +106,21 @@ export function WorkOrderFormModal({ open, onClose, onSaved, workOrder }: Props)
       setError("Please describe the 'Others' category.");
       return;
     }
+    if (!form.contact_number.trim()) {
+      setError("Contact number is required.");
+      return;
+    }
 
     setSaving(true);
     const payload: WorkOrderInput = {
       category: form.category,
       category_other: form.category === "others" ? form.category_other.trim() : null,
       customer_name: form.customer_name.trim(),
-      contact_number: form.contact_number.trim() || null,
+      contact_number: form.contact_number.trim(),
       description: form.description.trim(),
       assignee_id: form.assignee_id || null,
       urgency: form.urgency,
       order_date: form.order_date || null,
-      amount: form.amount === "" ? null : form.amount,
       due_date: form.due_date || null,
       notes: form.notes.trim() || null,
       status: form.status,
@@ -203,9 +203,11 @@ export function WorkOrderFormModal({ open, onClose, onSaved, workOrder }: Props)
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="contact_number">Contact number</Label>
+            <Label htmlFor="contact_number">Contact Number *</Label>
             <Input
               id="contact_number"
+              required
+              placeholder="Enter customer contact number"
               value={form.contact_number}
               onChange={(e) => set("contact_number", e.target.value)}
             />
@@ -240,7 +242,7 @@ export function WorkOrderFormModal({ open, onClose, onSaved, workOrder }: Props)
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="order_date">Date</Label>
             <Input
@@ -251,23 +253,13 @@ export function WorkOrderFormModal({ open, onClose, onSaved, workOrder }: Props)
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="due_date">Due date</Label>
+            <Label htmlFor="due_date">Due Date (Optional)</Label>
             <Input
               id="due_date"
               type="date"
               value={form.due_date}
+              placeholder="Select due date"
               onChange={(e) => set("due_date", e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="amount">Amount (₹)</Label>
-            <Input
-              id="amount"
-              type="number"
-              min="0"
-              step="0.01"
-              value={form.amount}
-              onChange={(e) => set("amount", e.target.value)}
             />
           </div>
           <div className="space-y-2">

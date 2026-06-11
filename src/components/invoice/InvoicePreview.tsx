@@ -53,7 +53,6 @@ export function InvoicePreview({
       {/* Firm header */}
       <header className="border-b-2 border-slate-800 pb-4 text-center">
         <h1 className="text-2xl font-bold tracking-wide text-slate-900">{FIRM.name}</h1>
-        <p className="mt-0.5 text-sm font-medium text-blue-700">{FIRM.tagline}</p>
         <div className="mt-2 text-xs leading-relaxed text-slate-600">
           {FIRM.addressLines.map((l) => (
             <p key={l}>{l}</p>

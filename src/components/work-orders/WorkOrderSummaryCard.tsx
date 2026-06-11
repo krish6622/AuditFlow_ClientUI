@@ -17,16 +17,6 @@ const URGENCY_BADGE: Record<WorkOrderUrgency, { label: string; variant: "seconda
   high: { label: "High", variant: "amber" },
 };
 
-function formatAmount(amount: string): string {
-  const n = Number(amount);
-  if (Number.isNaN(n) || n === 0) return "—";
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 2,
-  }).format(n);
-}
-
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="space-y-1">
@@ -66,7 +56,6 @@ export function WorkOrderSummaryCard({ workOrder: wo, onCreateAnother }: Props) 
           <Field label="Assigned employee" value={wo.assigned_employee_name} />
           <Field label="Urgency" value={<Badge variant={urgency.variant}>{urgency.label}</Badge>} />
           <Field label="Due date" value={wo.due_date} />
-          <Field label="Expected amount" value={formatAmount(wo.amount)} />
           <div className="sm:col-span-2">
             <Field
               label="Work description"

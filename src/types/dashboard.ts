@@ -4,7 +4,6 @@ export interface KpiTotals {
   work_orders: number;
   completed_work_orders: number;
   invoices: number;
-  revenue: string; // Decimal as string
   awaiting_assignment: number;
 }
 
@@ -12,7 +11,6 @@ export interface KpiDeltas {
   work_orders_pct: number | null;
   completed_pct: number | null;
   invoices_pct: number | null;
-  revenue_pct: number | null;
 }
 
 export interface RecentWorkOrder {
@@ -22,7 +20,6 @@ export interface RecentWorkOrder {
   assigned_employee_name: string | null;
   status: WorkOrderStatus;
   due_date: string | null;
-  amount: string;
 }
 
 export interface DashboardSummary {
