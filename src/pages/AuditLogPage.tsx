@@ -26,8 +26,6 @@ const ACTION_META: Record<
   role_demoted: { label: "Demoted to Employee", variant: "amber" },
   status_activated: { label: "Activated", variant: "blue" },
   status_deactivated: { label: "Deactivated", variant: "secondary" },
-  user_approved: { label: "Approved", variant: "green" },
-  user_rejected: { label: "Rejected", variant: "secondary" },
   user_deleted: { label: "Deleted", variant: "secondary" },
 };
 
@@ -89,8 +87,6 @@ export default function AuditLogPage() {
         <option value="">All actions</option>
         <option value="role_promoted">Promotions</option>
         <option value="role_demoted">Demotions</option>
-        <option value="user_approved">Approvals</option>
-        <option value="user_rejected">Rejections</option>
         <option value="status_activated">Activations</option>
         <option value="status_deactivated">Deactivations</option>
         <option value="user_deleted">Deletions</option>

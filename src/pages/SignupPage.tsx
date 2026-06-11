@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Eye,
@@ -7,7 +7,6 @@ import {
   Loader2,
   Lock,
   Mail,
-  MailCheck,
   User,
 } from "lucide-react";
 
@@ -34,6 +33,7 @@ function passwordStrength(pw: string): Strength {
 
 export default function SignupPage() {
   const { register } = useAuth();
+  const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,9 +41,6 @@ export default function SignupPage() {
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  // Set once registration succeeds — the account is pending admin approval and
-  // is NOT signed in, so we show a confirmation instead of entering the app.
-  const [submitted, setSubmitted] = useState<string | null>(null);
 
   const strength = useMemo(() => passwordStrength(password), [password]);
 
@@ -56,12 +53,12 @@ export default function SignupPage() {
     }
     setSubmitting(true);
     try {
-      const res = await register({
+      await register({
         email,
         password,
         full_name: fullName.trim() || undefined,
       });
-      setSubmitted(res.message);
+      navigate("/", { replace: true });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Unable to create account");
     } finally {
@@ -71,36 +68,6 @@ export default function SignupPage() {
 
   const inputClass =
     "h-14 rounded-xl border-softgray bg-white pl-12 pr-4 text-[15px] text-charcoal transition-all duration-200 placeholder:text-charcoal/35 focus-visible:border-navy focus-visible:ring-2 focus-visible:ring-navy/20 focus-visible:ring-offset-0";
-
-  if (submitted) {
-    return (
-      <AuthShell>
-        <div className="flex w-full max-w-[520px] animate-fade-in flex-col gap-4">
-          <div className="rounded-[28px] border border-black/5 bg-white p-8 text-center shadow-[0_30px_70px_-25px_rgba(11,19,43,0.22)] sm:p-10">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50">
-              <MailCheck className="h-8 w-8 text-emerald-600" />
-            </div>
-            <h2 className="mt-6 font-serif text-3xl font-semibold tracking-tight text-navy">
-              Registration submitted
-            </h2>
-            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-charcoal/65">
-              {submitted}
-            </p>
-            <div className="mt-6 rounded-xl border border-gold/30 bg-gold/5 px-4 py-3 text-sm text-charcoal/70">
-              Your account is awaiting administrator approval. You'll be able to
-              sign in once it's approved.
-            </div>
-            <Link
-              to="/login"
-              className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#16223f] to-navy text-sm font-medium text-white shadow-[0_12px_30px_-12px_rgba(11,19,43,0.7)] transition-all duration-200 hover:-translate-y-0.5"
-            >
-              Back to Sign In
-            </Link>
-          </div>
-        </div>
-      </AuthShell>
-    );
-  }
 
   return (
     <AuthShell>
@@ -118,8 +85,7 @@ export default function SignupPage() {
             Create your account
           </h2>
           <p className="mt-2 text-sm text-charcoal/60">
-            Request access to Elangovan Associates. An administrator will approve
-            your account before you can sign in.
+            Start managing your work orders and invoices.
           </p>
           <div className="mt-5 h-px w-14 bg-gradient-to-r from-gold to-gold/20" />
 
@@ -225,7 +191,7 @@ export default function SignupPage() {
               className="group relative flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#16223f] to-navy text-[15px] font-medium text-white shadow-[0_12px_30px_-12px_rgba(11,19,43,0.7)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-12px_rgba(11,19,43,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:translate-y-0"
             >
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {submitting ? "Submitting…" : "Request Access"}
+              {submitting ? "Creating account…" : "Create Account"}
             </button>
           </form>
 
