@@ -40,7 +40,8 @@ interface AuthContextValue {
   loading: boolean;
   login: (identifier: string, password: string) => Promise<void>;
   register: (input: {
-    email: string;
+    email?: string;
+    phone?: string;
     password: string;
     full_name?: string;
   }) => Promise<void>;

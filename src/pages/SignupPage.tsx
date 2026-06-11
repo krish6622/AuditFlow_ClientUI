@@ -7,6 +7,7 @@ import {
   Loader2,
   Lock,
   Mail,
+  Phone,
   User,
 } from "lucide-react";
 
@@ -36,6 +37,7 @@ export default function SignupPage() {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -47,6 +49,10 @@ export default function SignupPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!email.trim() && !phone.trim()) {
+      setError("Enter your email address or mobile number.");
+      return;
+    }
     if (password.length < 8) {
       setError("Your password must be at least 8 characters.");
       return;
@@ -54,7 +60,8 @@ export default function SignupPage() {
     setSubmitting(true);
     try {
       await register({
-        email,
+        email: email.trim() || undefined,
+        phone: phone.trim() || undefined,
         password,
         full_name: fullName.trim() || undefined,
       });
@@ -101,7 +108,6 @@ export default function SignupPage() {
                   id="email"
                   type="email"
                   autoComplete="email"
-                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
@@ -109,6 +115,31 @@ export default function SignupPage() {
                   className={inputClass}
                 />
               </div>
+            </div>
+
+            {/* Mobile number */}
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-sm font-medium text-charcoal">
+                Mobile Number
+              </Label>
+              <div className="relative">
+                <Phone className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-charcoal/35" />
+                <Input
+                  id="phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Enter your mobile number"
+                  aria-invalid={!!error}
+                  className={inputClass}
+                />
+              </div>
+              <p className="text-xs text-charcoal/45">
+                Provide an email, a mobile number, or both — you can sign in with
+                either.
+              </p>
             </div>
 
             {/* Password */}
