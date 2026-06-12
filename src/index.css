@@ -76,20 +76,41 @@
     display: block !important;
   }
 
+  /* Print isolation: render ONLY the invoice document, anchored to the page
+     origin. This neutralises any ancestor padding/margins (e.g. the builder's
+     page gutters) that would otherwise offset the invoice and spill it onto a
+     second page. */
+  body * {
+    visibility: hidden !important;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible !important;
+    /* Ensure navy/gold fills, table header and wave SVGs print at full
+       saturation in both browser print and the generated PDF. */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   .print-area {
-    box-shadow: none !important;
-    border: none !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    /* Auto-fit: `--print-scale` (set by InvoicePreview) shrinks a long invoice
+       to one page. Width is pre-divided by the scale so that, after `zoom`
+       scales the box back down, the document still fills the full page width. */
+    width: calc(100% / var(--print-scale, 1)) !important;
+    zoom: var(--print-scale, 1);
+    max-width: none !important;
+    min-height: 0 !important;
     margin: 0 !important;
     padding: 0 !important;
-    max-width: none !important;
-    width: 100% !important;
-    /* Ensure table header / coloured fills are printed. */
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    box-shadow: none !important;
+    border: none !important;
   }
 
   @page {
-    size: A4;
-    margin: 14mm;
+    size: A4 portrait;
+    margin: 6mm;
   }
 }
