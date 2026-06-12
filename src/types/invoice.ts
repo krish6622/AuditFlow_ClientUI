@@ -11,6 +11,12 @@ export interface InvoiceFormData {
   mca_charges: string;
   discount_percent: string;
   items: LineItemInput[];
+  // Optional fields surfaced on the branded invoice document. Additive — when
+  // blank the document simply omits them and totals are unchanged.
+  work_order_number?: string;
+  customer_contact?: string;
+  customer_gst?: string;
+  gst_percent?: string; // total GST %, split evenly into CGST + SGST
 }
 
 export interface InvoiceTotals {
@@ -18,6 +24,9 @@ export interface InvoiceTotals {
   gross: number;
   discountAmount: number;
   net: number;
+  cgst: number;
+  sgst: number;
+  total: number;
 }
 
 export interface SavedLineItem {

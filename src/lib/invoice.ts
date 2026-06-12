@@ -10,14 +10,20 @@ const round2 = (n: number): number => Math.round((n + Number.EPSILON) * 100) / 1
 /**
  * Gross  = sum(service amounts) + MCA charges
  * Discount = Gross × Discount%
- * Net    = Gross − Discount
+ * Net    = Gross − Discount  (the GST-taxable value)
+ * CGST = SGST = Net × (GST% / 2)
+ * Total  = Net + CGST + SGST
  */
 export function computeTotals(form: InvoiceFormData): InvoiceTotals {
   const services = round2(form.items.reduce((sum, i) => sum + toNum(i.amount), 0));
   const gross = round2(services + toNum(form.mca_charges));
   const discountAmount = round2((gross * toNum(form.discount_percent)) / 100);
   const net = round2(gross - discountAmount);
-  return { services, gross, discountAmount, net };
+  const halfGst = toNum(form.gst_percent ?? "") / 2;
+  const cgst = round2((net * halfGst) / 100);
+  const sgst = cgst;
+  const total = round2(net + cgst + sgst);
+  return { services, gross, discountAmount, net, cgst, sgst, total };
 }
 
 export function formatINR(n: number): string {
