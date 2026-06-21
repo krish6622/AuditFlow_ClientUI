@@ -6,9 +6,20 @@ import { InvoiceForm } from "@/components/invoice/InvoiceForm";
 import { InvoicePreview } from "@/components/invoice/InvoicePreview";
 import { Button } from "@/components/ui/button";
 import { ApiError, invoicingApi } from "@/lib/api";
+import type { CustomerLookupItem } from "@/types/customer";
 import type { InvoiceCreatePayload, InvoiceFormData, SavedInvoice } from "@/types/invoice";
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+/** Compose a printable address block from a customer-master record. */
+function formatCustomerAddress(c: CustomerLookupItem): string {
+  const cityState = [c.city, c.state].filter(Boolean).join(", ");
+  const lastLine = [cityState, c.pincode].filter(Boolean).join(" - ");
+  return [c.address_line_1, c.address_line_2, lastLine]
+    .map((s) => s?.trim())
+    .filter(Boolean)
+    .join("\n");
+}
 
 const EMPTY: InvoiceFormData = {
   invoice_number: "",
@@ -52,6 +63,7 @@ export default function InvoiceBuilderPage() {
   const idParam = params.get("id");
 
   const [form, setForm] = useState<InvoiceFormData>(EMPTY);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerLookupItem | null>(null);
   const [saved, setSaved] = useState(false); // locked after save / when viewing
   const [loading, setLoading] = useState(false);
   const [savingErr, setSavingErr] = useState<string | null>(null);
@@ -108,6 +120,19 @@ export default function InvoiceBuilderPage() {
     };
   }, [form.invoice_date, numberEdited, idParam, saved]);
 
+  // Selecting a customer from the master auto-fills the client fields.
+  function applyCustomer(customer: CustomerLookupItem | null) {
+    setSelectedCustomer(customer);
+    if (!customer) return;
+    setForm((f) => ({
+      ...f,
+      customer_name: customer.business_name || customer.client_name,
+      customer_contact: customer.mobile_number || f.customer_contact,
+      customer_gst: customer.gst_number || f.customer_gst,
+      customer_address: formatCustomerAddress(customer) || f.customer_address,
+    }));
+  }
+
   function validate(): string | null {
     if (!form.invoice_number.trim()) return "Invoice number is required";
     if (!form.invoice_date) return "Invoice date is required";
@@ -148,6 +173,7 @@ export default function InvoiceBuilderPage() {
 
   function resetNew() {
     setForm({ ...EMPTY, invoice_date: today() });
+    setSelectedCustomer(null);
     setSaved(false);
     setNumberEdited(false);
     setSavingErr(null);
@@ -209,6 +235,8 @@ export default function InvoiceBuilderPage() {
                 disabled={saved}
                 numberHint="Auto-generated from the invoice date — you can edit it."
                 onInvoiceNumberManualEdit={() => setNumberEdited(true)}
+                selectedCustomer={selectedCustomer}
+                onSelectCustomer={applyCustomer}
               />
             )}
           </div>

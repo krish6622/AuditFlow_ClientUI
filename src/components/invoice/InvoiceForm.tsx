@@ -1,10 +1,12 @@
 import { Plus, Trash2 } from "lucide-react";
 
+import { CustomerLookup } from "@/components/customers/CustomerLookup";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { computeTotals, formatINR } from "@/lib/invoice";
+import type { CustomerLookupItem } from "@/types/customer";
 import type { InvoiceFormData, LineItemInput } from "@/types/invoice";
 
 interface Props {
@@ -15,6 +17,10 @@ interface Props {
   numberHint?: string;
   /** Called when the user manually edits the invoice number. */
   onInvoiceNumberManualEdit?: () => void;
+  /** Customer currently locked in via the master lookup (if any). */
+  selectedCustomer?: CustomerLookupItem | null;
+  /** Apply / clear a customer from the master — auto-fills the client fields. */
+  onSelectCustomer?: (customer: CustomerLookupItem | null) => void;
 }
 
 export function InvoiceForm({
@@ -23,6 +29,8 @@ export function InvoiceForm({
   disabled,
   numberHint,
   onInvoiceNumberManualEdit,
+  selectedCustomer,
+  onSelectCustomer,
 }: Props) {
   const totals = computeTotals(form);
 
@@ -93,6 +101,17 @@ export function InvoiceForm({
             disabled={disabled}
           />
         </div>
+        {onSelectCustomer && !disabled && (
+          <div className="space-y-2">
+            <Label htmlFor="customer_lookup">
+              Find customer
+              <span className="ml-1 font-normal text-muted-foreground">
+                (search the customer master to auto-fill)
+              </span>
+            </Label>
+            <CustomerLookup selected={selectedCustomer ?? null} onSelect={onSelectCustomer} />
+          </div>
+        )}
         <div className="space-y-2">
           <Label htmlFor="customer_name">Customer Name</Label>
           <Input
