@@ -24,6 +24,7 @@ export interface WorkOrder {
   number: string;
   category: WorkOrderCategory | null;
   category_other: string | null;
+  customer_id: string | null;
   customer_name: string | null;
   contact_number: string | null;
   assignee_id: string | null;
@@ -49,6 +50,7 @@ export interface WorkOrderListResponse {
 export interface WorkOrderInput {
   category: WorkOrderCategory;
   category_other?: string | null;
+  customer_id?: string | null;
   customer_name: string;
   contact_number?: string | null;
   description: string;

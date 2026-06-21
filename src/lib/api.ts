@@ -23,6 +23,17 @@ import type {
 } from "@/types/employee";
 import type { AuditAction, AuditLogListResponse } from "@/types/audit";
 import type { NotificationListResponse, AppNotification } from "@/types/notification";
+import type {
+  Customer,
+  CustomerAuditEntry,
+  CustomerInput,
+  CustomerInvoiceItem,
+  CustomerLookupItem,
+  CustomerStats,
+  CustomerType,
+  CustomerUpdateInput,
+  CustomerWorkOrderItem,
+} from "@/types/customer";
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.replace(
   /\/$/,
@@ -379,6 +390,66 @@ export const employeesApi = {
       method: "PATCH",
       body: { role },
     });
+  },
+};
+
+// --------------------------------------------------------------------------- //
+// Customers API
+// --------------------------------------------------------------------------- //
+export interface CustomerQuery {
+  search?: string;
+  customer_type?: CustomerType | "";
+  status?: "active" | "inactive" | "";
+  city?: string;
+}
+
+export const customersApi = {
+  list(params: CustomerQuery = {}): Promise<Customer[]> {
+    const q = new URLSearchParams();
+    if (params.search) q.set("search", params.search);
+    if (params.customer_type) q.set("customer_type", params.customer_type);
+    if (params.status) q.set("status", params.status);
+    if (params.city) q.set("city", params.city);
+    const qs = q.toString();
+    return request<Customer[]>(`/customers${qs ? `?${qs}` : ""}`);
+  },
+  stats(): Promise<CustomerStats> {
+    return request<CustomerStats>("/customers/stats");
+  },
+  cities(): Promise<string[]> {
+    return request<string[]>("/customers/cities");
+  },
+  // Active-customer picker for work-order / invoice creation.
+  lookup(search?: string): Promise<CustomerLookupItem[]> {
+    const q = search ? `?search=${encodeURIComponent(search)}` : "";
+    return request<CustomerLookupItem[]>(`/customers/lookup${q}`);
+  },
+  get(id: string): Promise<Customer> {
+    return request<Customer>(`/customers/${id}`);
+  },
+  auditLogs(id: string): Promise<CustomerAuditEntry[]> {
+    return request<CustomerAuditEntry[]>(`/customers/${id}/audit-logs`);
+  },
+  workOrders(id: string): Promise<CustomerWorkOrderItem[]> {
+    return request<CustomerWorkOrderItem[]>(`/customers/${id}/work-orders`);
+  },
+  invoices(id: string): Promise<CustomerInvoiceItem[]> {
+    return request<CustomerInvoiceItem[]>(`/customers/${id}/invoices`);
+  },
+  create(input: CustomerInput): Promise<Customer> {
+    return request<Customer>("/customers", { method: "POST", body: input });
+  },
+  update(id: string, input: CustomerUpdateInput): Promise<Customer> {
+    return request<Customer>(`/customers/${id}`, { method: "PUT", body: input });
+  },
+  activate(id: string): Promise<Customer> {
+    return request<Customer>(`/customers/${id}/activate`, { method: "PATCH" });
+  },
+  deactivate(id: string): Promise<Customer> {
+    return request<Customer>(`/customers/${id}/deactivate`, { method: "PATCH" });
+  },
+  remove(id: string): Promise<void> {
+    return request<void>(`/customers/${id}`, { method: "DELETE" });
   },
 };
 

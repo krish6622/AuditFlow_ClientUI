@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Loader2 } from "lucide-react";
 
+import { CustomerLookup } from "@/components/customers/CustomerLookup";
 import { WorkOrderSummaryCard } from "@/components/work-orders/WorkOrderSummaryCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
 import { ApiError, employeesApi, workOrdersApi } from "@/lib/api";
+import type { CustomerLookupItem } from "@/types/customer";
 import type { Employee } from "@/types/employee";
 import {
   WORK_ORDER_CATEGORIES,
@@ -30,6 +32,7 @@ function todayISO(): string {
 interface FormState {
   category: WorkOrderCategory | "";
   category_other: string;
+  customer_id: string;
   customer_name: string;
   contact_number: string;
   assignee_id: string;
@@ -42,6 +45,7 @@ interface FormState {
 const emptyForm = (): FormState => ({
   category: "",
   category_other: "",
+  customer_id: "",
   customer_name: "",
   contact_number: "",
   assignee_id: "",
@@ -93,6 +97,7 @@ export default function NewWorkOrderPage() {
   const backTo = isAdmin ? "/work-orders" : "/my-requests";
 
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerLookupItem | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -112,6 +117,22 @@ export default function NewWorkOrderPage() {
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
     setErrors((e) => ({ ...e, [key]: undefined }));
+  }
+
+  // Selecting a customer from the master auto-populates the client fields.
+  function applyCustomer(customer: CustomerLookupItem | null) {
+    setSelectedCustomer(customer);
+    if (customer) {
+      setForm((f) => ({
+        ...f,
+        customer_id: customer.id,
+        customer_name: customer.business_name || customer.client_name,
+        contact_number: customer.mobile_number ?? f.contact_number,
+      }));
+      setErrors((e) => ({ ...e, customer_name: undefined, contact_number: undefined }));
+    } else {
+      setForm((f) => ({ ...f, customer_id: "" }));
+    }
   }
 
   function validate(): boolean {
@@ -141,6 +162,7 @@ export default function NewWorkOrderPage() {
     const payload: WorkOrderInput = {
       category: form.category as WorkOrderCategory,
       category_other: form.category === "others" ? form.category_other.trim() : null,
+      customer_id: form.customer_id || null,
       customer_name: form.customer_name.trim(),
       contact_number: form.contact_number.trim() || null,
       urgency: form.urgency,
@@ -164,6 +186,7 @@ export default function NewWorkOrderPage() {
 
   function reset() {
     setForm(emptyForm());
+    setSelectedCustomer(null);
     setErrors({});
     setFormError(null);
     setCreated(null);
@@ -258,6 +281,15 @@ export default function NewWorkOrderPage() {
               <CardTitle className="text-base">Client</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <Fieldset
+                  id="customer_lookup"
+                  label="Find customer"
+                  hint="(search the customer master to auto-fill)"
+                >
+                  <CustomerLookup selected={selectedCustomer} onSelect={applyCustomer} />
+                </Fieldset>
+              </div>
               <Fieldset id="customer_name" label="Customer name" required error={errors.customer_name}>
                 <Input
                   id="customer_name"

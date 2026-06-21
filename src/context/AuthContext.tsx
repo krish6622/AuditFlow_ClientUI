@@ -29,6 +29,7 @@ const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     "report:view",
   ],
   employee: [
+    "customer:view",
     "workorder:create_request",
     "workorder:view_assigned",
     "workorder:update_status",
