@@ -6,6 +6,7 @@ import { RequirePermission } from "@/components/RequirePermission";
 import { AuthProvider } from "@/context/AuthContext";
 import AuditLogPage from "@/pages/AuditLogPage";
 import ChangePasswordPage from "@/pages/ChangePasswordPage";
+import CustomerDetailsPage from "@/pages/CustomerDetailsPage";
 import CustomersPage from "@/pages/CustomersPage";
 import EmployeesPage from "@/pages/EmployeesPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
@@ -57,6 +58,7 @@ export default function App() {
               </Route>
               <Route element={<RequirePermission permission="customer:view" />}>
                 <Route path="/customers" element={<CustomersPage />} />
+                <Route path="/customers/:id" element={<CustomerDetailsPage />} />
               </Route>
               <Route element={<RequirePermission permission="report:view" />}>
                 <Route path="/reports" element={<ReportsPage />} />
